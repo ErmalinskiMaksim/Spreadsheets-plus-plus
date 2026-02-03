@@ -1,6 +1,6 @@
-#include "Layer.h"
+#include "ILayer.h"
 
-OptRequest Layer::readRequest() {
+OptRequest ILayer::readRequest() {
     auto req = std::move(m_pendingRequest);
     m_pendingRequest.reset();
     return req;

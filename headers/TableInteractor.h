@@ -4,7 +4,6 @@
 #include "Handlers.h"
 #include "TableStateMachine.h"
 #include "DataStorage.h"
-#include "TextRenderer.h"
 
 // A layer of indirection between layer event processing and the table widget
 template<WidgetType MainWidget = TableWidget, 
@@ -17,7 +16,7 @@ class TableInteractor {
     using TableWidgetRef = std::reference_wrapper<MainWidget>;
     using FSM = TableStateMachine<IdleTableState, ColumnResizingTableState, RowResizingTableState>; 
 public:
-    TableInteractor(TableWidgetRef table, RequestView req)
+    TableInteractor(NonModalLayerCreateRequest::Payload&&, TableWidgetRef table, RequestView req)
     : m_operation{EmptyOperation{}} 
     , m_hoveredCell{0.0f, 0.0f, 0.0f, 0.0f}
     , m_mousePos{0.0f, 0.0f}

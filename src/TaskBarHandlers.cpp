@@ -9,7 +9,7 @@
 bool FileActionHandler::dispatch(MenuResponse&& resp, HandlerContext ctx) {
     auto& req = ctx.req.get();
     auto hbox = ctx.widget.getHitBox();
-    auto color = ctx.widget.getColor();
+    auto color = ctx.widget.getFillColor();
     auto charWidth = ctx.widget.getCharWidth();
     auto charHeight = ctx.widget.getCharHeight();
 
@@ -22,13 +22,15 @@ bool FileActionHandler::dispatch(MenuResponse&& resp, HandlerContext ctx) {
                 DialogCreateRequest{ 
                     Widget{ SDL_FRect{hbox.x, hbox.y + hbox.h, hbox.w, charHeight * 2}
                         , color - 0x11 
+                        , Color{}
                         , charWidth
                         , charHeight
-                    } 
-                    ,"Enter the file path:"
-                    , std::nullopt
-                    , FileManager::MAX_FILE_PATH_LEN 
-                };
+                    }
+                    , DialogCreateRequest::Payload{
+                         "Enter the file path:"
+                        , std::nullopt
+                        , FileManager::MAX_FILE_PATH_LEN 
+                    }};
             break;
         case Actions::CLOSE:
             DataStorage::get().clear();
@@ -74,15 +76,15 @@ bool HelpActionHandler::dispatch(MenuResponse&& resp, HandlerContext ctx) {
             req = PopupCreateRequest{
                 Widget {
                     SDL_FRect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth()*34, ctx.widget.getCharHeight()*5}
-                    , ctx.widget.getColor() - 0x11
+                    , ctx.widget.getFillColor() - 0x11
                 }
-                , { "Write to a cell:     LMB click"
+                , PopupCreateRequest::Payload{{ 
+                    "Write to a cell:     LMB click"
                   , "Commit text input:   Enter"
                   , "Resize a row/column: hold LMB+CTRL"
                   , "Exit application:    CTRL-Q"
                   , "Exit this pop-up:    LMB click"
-                }
-            };
+                }}};
             break;
         default: 
             return false;

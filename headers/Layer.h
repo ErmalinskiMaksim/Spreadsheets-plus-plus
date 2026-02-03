@@ -1,38 +1,61 @@
 #ifndef LAYER_H
 #define LAYER_H
-#include "Events.h"
-#include "Requests.h"
 
-struct SDL_Renderer;
-class TextRenderer;
+#include "ILayer.h"
+#include "Handlers.h"
 
-// Layer interface. Represents a graphical layer. 
-// * posses widgets and interactors
-// * dispatches and processes events delivered by GUI
-// * draws its widgets
-class Layer {
+template<WidgetType MainWidget
+        , template<typename, typename...> class Interactor
+        , CreateRequestType CreateRequest
+        , bool isModal
+        , ResponseHandler... Handlers>
+class Layer final : public ILayer {
 public:
-    // dispatch events passed from GUI
-    virtual void dispatchEvents(const GuiEvent&) = 0;
-    // draw widgets
-    virtual void draw(SDL_Renderer* const, const TextRenderer&) const = 0;
-    // react to responses to requests
-    virtual void onResponse(Responses&&) = 0;
-    // * test if mouse event is directed to the layer
-    // * it may be more complex then just checking if 
-    // the mouse is contained within a hit box:
-    // e.g. modal layers that always consume hits
-    virtual bool hitTest(float, float) const noexcept = 0;
-    virtual ~Layer() = default;
+    Layer (CreateRequest&& req, Handlers&&... handlers)
+    : m_widget(std::move(req.widget))
+    , m_interactor{std::move(req.payload), std::ref(m_widget), std::ref(m_pendingRequest)}
+    , m_handlers{handlers...}
+    , m_dispatcher{} 
+    {}
 
-    // allow GUI read layer's requests
-    OptRequest readRequest();
+    /// Layer's interface ///
+    void dispatchEvents(const GuiEvent& event) override {
+        std::visit([&](auto&& ev) { m_interactor.processEvents(ev); }, event);
+    }
+
+    void draw(SDL_Renderer* const renderer, const TextRenderer& textRenderer) const override {
+        m_widget.render(renderer, textRenderer);
+        m_interactor.render(renderer, textRenderer);
+    }
+
+    // dispatch responses to a correct action handler
+    void onResponse(Responses&& resp) override {
+        if constexpr (!isModal) {
+            std::apply([&](auto&... handlers) {
+                m_dispatcher.dispatch(
+                    std::move(resp)
+                    , HandlerContext{ std::ref(m_widget), std::ref(m_pendingRequest), m_interactor.getOperationView()}
+                    , handlers...
+                    );
+                }, m_handlers);
+            m_interactor.processOperation();
+        }
+    }
+
+    bool hitTest(float x, float y) const noexcept override {
+        if constexpr (!isModal) {
+            return m_widget.contains(x, y);
+        } else return true;
+    }
 protected:
-    // process events of individual types
-    template<GuiEventType Event>
-    inline void processEvents(const Event&) noexcept {}
+    // main widget of the layer
+    MainWidget m_widget;
+    // main interactor of the layer with the widget
+    Interactor<MainWidget, Handlers...> m_interactor;
 
-    // requests to the GUI
-    OptRequest m_pendingRequest;
+    // action handlers of the layer and a dispatcher for handlers
+    std::tuple<Handlers...> m_handlers;
+    ResponseDispatcher<Handlers...> m_dispatcher;
 };
+
 #endif

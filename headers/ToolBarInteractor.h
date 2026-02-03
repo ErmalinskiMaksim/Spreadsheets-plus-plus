@@ -3,7 +3,6 @@
 
 #include "Events.h"
 #include "Handlers.h"
-#include "TextRenderer.h"
 #include <tuple>
 #include <array>
 
@@ -16,20 +15,13 @@ using WidgetView = std::reference_wrapper<MainWidget>;
     template <std::size_t I>
     using Handler = std::tuple_element_t<I, std::tuple<Handlers...>>;
 public:
-    ToolBarInteractor(WidgetView widget, RequestView req) 
+    ToolBarInteractor(NonModalLayerCreateRequest::Payload&&, WidgetView widget, RequestView req) 
     : m_tools{Handlers::getID()...}
     , m_buttons{}
     , m_operation{EmptyOperation{}}
     , r_widget{widget}
     , r_pendingRequest{req}
-    {
-        // auto hbox = r_widget.get().getHitBox();
-        // auto w = r_widget.get().getCharWidth();
-        // for (auto i = 0uz; i < m_buttons.size(); ++i) {
-        //     m_buttons[i] = {hbox.x, hbox.y, w * static_cast<float>(m_tools[i].size()), hbox.h };
-        //     hbox.x += m_buttons[i].w;
-        // }
-    }
+    {}
     template<GuiEventType Event>
     void processEvents(const Event&) {}
 

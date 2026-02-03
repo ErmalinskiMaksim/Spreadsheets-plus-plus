@@ -13,9 +13,10 @@ Color::operator SDL_Color() const noexcept {
     return SDL_Color(r, g, b, a);
 }
 
-Widget::Widget(SDL_FRect&& hitBox, Color fillColor, float charWidth, float charHeight) 
+Widget::Widget(SDL_FRect&& hitBox, Color fillColor, Color outlineColor, float charWidth, float charHeight) 
     : m_hitBox(hitBox)
       , m_fillColor(fillColor)
+      , m_outlineColor(outlineColor)
       , m_charWidth(charWidth)
       , m_charHeight(charHeight)
 {}
@@ -29,14 +30,22 @@ void Widget::render(SDL_Renderer* renderer, const TextRenderer&) const noexcept 
     // draw background
     SDL_SetRenderDrawColor(renderer, m_fillColor.r, m_fillColor.g, m_fillColor.b, m_fillColor.a);
     SDL_RenderFillRect(renderer, &m_hitBox);
+
+    // draw outline
+    SDL_SetRenderDrawColor(renderer, m_outlineColor.r, m_outlineColor.g, m_outlineColor.b, m_outlineColor.a);
+    SDL_RenderRect(renderer, &m_hitBox);
 }
 
 SDL_FRect Widget::getHitBox() const noexcept {
     return m_hitBox;
 }
 
-Color Widget::getColor() const noexcept {
+Color Widget::getFillColor() const noexcept {
     return m_fillColor;
+}
+
+Color Widget::getOutlineColor() const noexcept {
+    return m_outlineColor;
 }
 
 float Widget::getCharWidth() const noexcept {

@@ -5,7 +5,7 @@
 #include "TextRenderer.h"
 #include <vector>
 
-class Layer;
+class ILayer;
 
 // The main GUI manager class 
 // * initializes and destroys SDL and SDL_TTF
@@ -38,14 +38,14 @@ private:
     bool processRequests();
     
     // layer focus handling
-    void setFocus(Layer*) noexcept;
+    void setFocus(ILayer*) noexcept;
     void popFocus() noexcept;
-    Layer* getFocusedLayer() const noexcept;
+    ILayer* getFocusedLayer() const noexcept;
     
     // z-depth array of layers [bottom->top]
-    std::vector<std::unique_ptr<Layer>> m_layers; 
+    std::vector<std::unique_ptr<ILayer>> m_layers; 
     // non owning focus stack of layers
-    std::vector<Layer*> m_focusStack; 
+    std::vector<ILayer*> m_focusStack; 
     // main window
     std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> m_window;
     // main renderer

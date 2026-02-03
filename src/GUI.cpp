@@ -1,19 +1,19 @@
 #include "GUI.h"
-#include "DialogLayer.h"
+// layers
+#include "ILayer.h"
+#include "Layer.h"
+// handlers
 #include "Requests.h"
-#include "NonModalLayer.h"
-#include "TableHandlers.h"
 #include "TaskBarHandlers.h"
+// interactors
 #include "TaskBarInteractor.h"
-// #include "TaskBarLayer.h"
-// #include "ToolBarLayer.h"
-#include "MenuLayer.h"
 #include "TableInteractor.h"
 #include "ToolBarInteractor.h"
-// #include "TableLayer.h"
-#include "PopupLayer.h"
+#include "MenuInteractor.h"
+#include "DialogInteractor.h"
+#include "PopupInteractor.h"
+
 #include <iostream>
-#include <variant>
 
 // Window data
 constexpr int WINDOW_WIDTH = 800;
@@ -66,30 +66,39 @@ GUI::GUI() : m_layers(3)
     // initialize the layers in the ascending order
     auto charWidth = m_textRenderer.getCharacterWidth();
     auto charHeight = m_textRenderer.getCharacterHeight();
-    m_layers[0] = std::make_unique<NonModalLayer<TableWidget, TableInteractor
+    m_layers[0] = std::make_unique
+        <Layer<TableWidget, TableInteractor, NonModalLayerCreateRequest, false
         , TableOperationsActionHandler, TableCellActionHandler>>( 
-            Widget {
-                SDL_FRect{0.0f, 0.2f * WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT * 0.8f}
-                , Color{0xEE, 0xEE, 0xEE, 0xFF}
-                , charWidth
-                , charHeight
-            }
+            NonModalLayerCreateRequest{
+                Widget {
+                    SDL_FRect{0.0f, 0.2f * WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT * 0.8f}
+                    , Color{0xEE, 0xEE, 0xEE, 0xFF}
+                    , Color{0xEE, 0xEE, 0xEE, 0xFF}
+                    , charWidth
+                    , charHeight
+                }, NonModalLayerCreateRequest::Payload{}}
             , TableOperationsActionHandler{}
             , TableCellActionHandler{}); // lowest layer
-    m_layers[1] = std::make_unique<NonModalLayer<Widget, ToolBarInteractor>>(
-            Widget {
-                SDL_FRect{0.0f, 0.05f * WINDOW_HEIGHT, WINDOW_WIDTH, 0.15f * WINDOW_HEIGHT}
-                , Color{0xBB, 0xBB, 0xBB, 0xFF}
-                , charWidth
-                , charHeight
-            }); 
-    m_layers[2] = std::make_unique<NonModalLayer<Widget, TaskBarInteractor,
-        FileActionHandler, HelpActionHandler>>(
-            Widget {
-                SDL_FRect{0.0f, 0.0f, WINDOW_WIDTH, 0.05f * WINDOW_HEIGHT}, 
-                Color{0xCC, 0xCC, 0xCC, 0xFF},
-                charWidth, charHeight
-            }
+    m_layers[1] = std::make_unique
+        <Layer<Widget, ToolBarInteractor, NonModalLayerCreateRequest, false>>(
+            NonModalLayerCreateRequest{
+                Widget {
+                    SDL_FRect{0.0f, 0.05f * WINDOW_HEIGHT, WINDOW_WIDTH, 0.15f * WINDOW_HEIGHT}
+                    , Color{0xBB, 0xBB, 0xBB, 0xFF}
+                    , Color{0xBB, 0xBB, 0xBB, 0xFF}
+                    , charWidth
+                    , charHeight
+                }, NonModalLayerCreateRequest::Payload{}}); 
+    m_layers[2] = std::make_unique
+        <Layer<Widget, TaskBarInteractor, NonModalLayerCreateRequest, false
+        , FileActionHandler, HelpActionHandler>>(
+            NonModalLayerCreateRequest{
+                Widget {
+                    SDL_FRect{0.0f, 0.0f, WINDOW_WIDTH, 0.05f * WINDOW_HEIGHT}, 
+                    Color{0xCC, 0xCC, 0xCC, 0xFF},
+                    Color{0xCC, 0xCC, 0xCC, 0xFF},
+                    charWidth, charHeight
+                }, NonModalLayerCreateRequest::Payload{}}
             , FileActionHandler{}
             , HelpActionHandler{});
     // by default the lowest layer has focus
@@ -109,7 +118,7 @@ GUI::~GUI() {
     SDL_Quit();
 }
 
-void GUI::setFocus(Layer* layer) noexcept {
+void GUI::setFocus(ILayer* layer) noexcept {
     // if not itself -> set focus 
     if (!m_focusStack.empty() && m_focusStack.back() == layer)
         return;
@@ -121,7 +130,7 @@ void GUI::popFocus() noexcept {
         m_focusStack.pop_back();
 }
 
-Layer* GUI::getFocusedLayer() const noexcept {
+ILayer* GUI::getFocusedLayer() const noexcept {
     return m_focusStack.empty() ? nullptr : m_focusStack.back();
 }
 
@@ -147,7 +156,7 @@ bool GUI::processEvents() {
                         || std::is_same_v<T, MouseRightUpEvent>
                         || std::is_same_v<T, MouseMotionEvent>) {
                     // find a target layer that must consume the event and quit
-                    Layer* target = nullptr;
+                    ILayer* target = nullptr;
                     for (auto it = m_layers.rbegin(); it != m_layers.rend(); ++it) {
                         // event consumption is hit test based
                         if ((*it)->hitTest(ev.x, ev.y)) {
@@ -166,7 +175,7 @@ bool GUI::processEvents() {
         else if (std::holds_alternative<KeyUpEvent>(*guiEvent)
                 || std::holds_alternative<TextInputEvent>(*guiEvent)
                 || std::holds_alternative<MouseScrollingEvent>(*guiEvent)) {
-            if (Layer* layer = getFocusedLayer())
+            if (ILayer* layer = getFocusedLayer())
                 layer->dispatchEvents(*guiEvent);
         }
     }
@@ -210,11 +219,14 @@ bool GUI::processRequests() {
 
     // if a layer 
     if (auto* menuReq = std::get_if<MenuCreateRequest>(&*req)) {
-        m_layers.push_back(std::make_unique<MenuLayer>(std::move(*menuReq)));
+        m_layers.push_back(std::make_unique
+                <Layer<Widget, MenuInteractor, MenuCreateRequest, true>>(std::move(*menuReq)));
     } else if (auto* dialogReq = std::get_if<DialogCreateRequest>(&*req)) {
-        m_layers.push_back(std::make_unique<DialogLayer>(std::move(*dialogReq)));
+        m_layers.push_back(std::make_unique
+                <Layer<Widget, DialogInteractor, DialogCreateRequest, true>>(std::move(*dialogReq)));
     } else if (auto* popupReq = std::get_if<PopupCreateRequest>(&*req)) {
-        m_layers.push_back(std::make_unique<PopupLayer>(std::move(*popupReq)));
+        m_layers.push_back(std::make_unique
+                <Layer<Widget, PopupInteractor, PopupCreateRequest, true>>(std::move(*popupReq)));
     } 
     // false == a new layer that was created first must process events before 
     // making requests, thus no chain of requests

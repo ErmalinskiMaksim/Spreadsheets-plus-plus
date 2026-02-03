@@ -3,7 +3,6 @@
 
 #include "Events.h"
 #include "Handlers.h"
-#include "TextRenderer.h"
 #include <tuple>
 #include <array>
 
@@ -14,7 +13,7 @@ class TaskBarInteractor {
     template <std::size_t I>
     using Handler = std::tuple_element_t<I, std::tuple<Handlers...>>;
 public:
-    TaskBarInteractor(WidgetView widget, RequestView req) 
+    TaskBarInteractor(NonModalLayerCreateRequest::Payload&&, WidgetView widget, RequestView req) 
     : m_tasks{Handlers::getID()...}
     , m_buttons{}
     , m_operation{EmptyOperation{}}

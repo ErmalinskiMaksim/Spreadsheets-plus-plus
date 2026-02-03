@@ -22,8 +22,8 @@ OptState IdleTableState::process(const MouseLeftDownEvent& event) {
 
         auto ctxRect = c.m_hoveredCell;
         c.r_layersRequest.get() = DialogCreateRequest{
-                    Widget{std::move(ctxRect), w.getColor()}
-                    , std::nullopt, std::move(str), MAX_CELL_TEXT_LENGTH};
+                    Widget{std::move(ctxRect), w.getFillColor()}
+                    , DialogCreateRequest::Payload{std::nullopt, std::move(str), MAX_CELL_TEXT_LENGTH}};
     } 
     return std::nullopt;
 }
@@ -40,8 +40,8 @@ OptState IdleTableState::process(const MouseRightUpEvent& event) {
     if (w.columnSpaceContains(c.m_mousePos) || w.rowSpaceContains(c.m_mousePos)) {
         auto ctxRect = c.m_hoveredCell;
         TableOperationsActionHandler::requestMainMenu(HandlerContext{
-                Widget{ std::move(ctxRect), w.getColor(), w.getCharWidth(), w.getCharHeight()}       
-                , c.r_layersRequest, c.getOperationView() });    
+            Widget{std::move(ctxRect), w.getFillColor(), w.getOutlineColor(), w.getCharWidth(), w.getCharHeight()}
+            , c.r_layersRequest, c.getOperationView() });    
     } // else if (w.spreadsheetSpaceContains(c.m_mousePos)) { cell menu } 
     return std::nullopt;
 }

@@ -13,7 +13,7 @@ public:
     // request a menu when first called
     // called when File menu is first invoked to display possible actions
     static bool requestMainMenu(HandlerContext ctx) {
-        using MenuAction = MenuCreateRequest::MenuAction;
+        using MenuAction = MenuCreateRequest::Payload::MenuAction;
 
         auto& req = ctx.req.get();
         auto hbox = ctx.widget.getHitBox();
@@ -21,13 +21,13 @@ public:
         req = MenuCreateRequest{
             Widget {
                  SDL_FRect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 5, ctx.widget.getCharHeight() * 3}
-                , ctx.widget.getColor() 
+                , ctx.widget.getFillColor() 
             }
-            , { MenuAction{"Open", static_cast<ActionID>(Actions::OPEN) }
+            , MenuCreateRequest::Payload{{
+                MenuAction{"Open", static_cast<ActionID>(Actions::OPEN) }
               , MenuAction{"Save", static_cast<ActionID>(Actions::SAVE) }
               , MenuAction{"Close", static_cast<ActionID>(Actions::CLOSE)}
-            }
-        }; 
+            }}}; 
 
         return true;
     }
@@ -50,7 +50,7 @@ public:
     // request a menu when first called
     // called when Help menu is first invoked to display possible actions
     static bool requestMainMenu(HandlerContext ctx) {
-        using MenuAction = MenuCreateRequest::MenuAction;
+        using MenuAction = MenuCreateRequest::Payload::MenuAction;
 
         auto& req = ctx.req.get();
         auto hbox = ctx.widget.getHitBox();
@@ -58,10 +58,11 @@ public:
         req = MenuCreateRequest{
                 Widget {
                     SDL_FRect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 10, ctx.widget.getCharHeight() }
-                  , ctx.widget.getColor()
+                  , ctx.widget.getFillColor()
                 }
-                , { MenuAction{"View Guide", static_cast<ActionID>(Actions::VIEW_GUIDE)}}
-            }; 
+                , MenuCreateRequest::Payload{{
+                    MenuAction{"View Guide", static_cast<ActionID>(Actions::VIEW_GUIDE)}
+                }}}; 
 
         return true;
     }
