@@ -3,6 +3,12 @@
 
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_pixels.h>
+#include <type_traits>
+#include "TextRenderer.h"
+
+class Widget;
+template<typename T>
+concept WidgetType = std::is_base_of_v<Widget, T>;
 
 // color wrapper
 struct Color {
@@ -31,6 +37,8 @@ public:
     static bool contains(float x, float y, const SDL_FRect& rect) noexcept {
         return (x > rect.x && x <= rect.x + rect.w) && (y > rect.y && y <= rect.y + rect.h); 
     }
+
+    void render(SDL_Renderer*, const TextRenderer&) const noexcept;
     
     SDL_FRect getHitBox() const noexcept;
     Color getColor() const noexcept;

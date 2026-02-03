@@ -1,130 +1,30 @@
 #ifndef TABLE_INTERACTOR_H
 #define TABLE_INTERACTOR_H
-#include "Events.h"
+
 #include "Handlers.h"
-
-// an action handler for spreadsheet menus. It is not yet 
-// the same general handler as in Handlers.cpp file.
-// It will be fixed in the future
-class TableWidgetActionHandler {
-    enum class Actions : ActionID { INSERT_AFTER, INSERT_BEFORE, DELETE };
-public:
-    void requestMainMenu(HandlerContext);
-    // TODO bool dispatch(MenuResponse&&, HandlerContext);
-    // TODO bool dispatch(DialogResponse&&, HandlerContext);
-};
-
-class TableInteractor;
-class TableWidget;
-class SDL_Renderer;
-class TextRenderer;
-class IdleTableState;
-class ColumnResizingTableState;
-class RowResizingTableState;
-
-// state machine states
-// Idle state = default state which processes 
-// scrolling, mouse motion, clicks
-// It may enter column/row resizing state. 
-// When resizing is finished the state returns to idle
-using States = std::variant<
-              IdleTableState
-            , ColumnResizingTableState 
-            , RowResizingTableState
-        >;
-using OptState = std::optional<States>;
-
-// Base state of the state machine. Does nothing by default
-class BaseTableState {
-public:
-    explicit BaseTableState(std::reference_wrapper<TableInteractor> context) 
-        : m_context(context) {}
-    // supported events
-    template<GuiEventType Event>
-    OptState process(const Event&);
-protected:
-    // Table interactor reference
-    std::reference_wrapper<TableInteractor> m_context;
-};
-
-template<typename T>
-concept TableStateType = std::is_base_of_v<BaseTableState, T>;
-
-class IdleTableState : public BaseTableState {
-public:
-    explicit IdleTableState(std::reference_wrapper<TableInteractor> context)
-        : BaseTableState(context) {}
-    // supported events
-    using BaseTableState::process;
-    OptState process(const MouseLeftDownEvent&);
-    OptState process(const MouseRightUpEvent&);
-    OptState process(const MouseMotionEvent&);
-    OptState process(const MouseScrollingEvent&);
-    // supported rendering logic
-    void draw(SDL_Renderer* const) const {}
-};
-
-class ColumnResizingTableState : public BaseTableState {
-public:
-    explicit ColumnResizingTableState(std::reference_wrapper<TableInteractor> context) 
-        : BaseTableState(context) {}
-    // supported events
-    using BaseTableState::process;
-    OptState process(const MouseLeftUpEvent&);
-    // supported rendering logic
-    void draw(SDL_Renderer* const) const;
-};
-
-class RowResizingTableState : public BaseTableState {
-public:
-    explicit RowResizingTableState(std::reference_wrapper<TableInteractor> context) 
-        : BaseTableState(context) {}
-    // supported events
-    using BaseTableState::process;
-    OptState process(const MouseLeftUpEvent&);
-    // supported rendering logic
-    void draw(SDL_Renderer* const) const;
-};
-
-// nothing by default
-template<GuiEventType Event>
-OptState BaseTableState::process(const Event&) {
-    return OptState{};
-}
-
-// state machine 
-template<TableStateType... States>
-class TableStateMachine {
-public:
-    template<TableStateType InitialState>
-    explicit TableStateMachine(InitialState&& state) 
-        : m_state(std::forward<InitialState>(state)) {}
-    // dispatches states 
-    template<GuiEventType Event>
-    void process(const Event& event) {
-        auto optResult = std::visit([&](auto& state) { return state.process(event); }, m_state);
-        if (optResult) m_state = std::move(*optResult);
-    }
-    // dispatches states
-    void draw(SDL_Renderer* const renderer) const {
-        std::visit([&](auto& state) { return state.draw(renderer); }, m_state);
-    }
-private:
-    std::variant<States...> m_state;
-};
+#include "TableStateMachine.h"
+#include "DataStorage.h"
+#include "TextRenderer.h"
 
 // A layer of indirection between layer event processing and the table widget
+template<WidgetType MainWidget = TableWidget, 
+    ResponseHandler H1 = TableOperationsActionHandler, ResponseHandler H2 = TableCellActionHandler>
 class TableInteractor {
     friend class IdleTableState;
     friend class ColumnResizingTableState;
     friend class RowResizingTableState;
-    enum class Actions : ActionID { INSERT_AFTER, INSERT_BEFORE, DELETE };
 
-    using TableWidgetRef = std::reference_wrapper<TableWidget>;
-    using RequestRef = std::reference_wrapper<OptRequest>;
+    using TableWidgetRef = std::reference_wrapper<MainWidget>;
     using FSM = TableStateMachine<IdleTableState, ColumnResizingTableState, RowResizingTableState>; 
 public:
-    TableInteractor(TableWidgetRef, RequestRef);
+    TableInteractor(TableWidgetRef table, RequestView req)
+    : m_operation{EmptyOperation{}} 
+    , m_hoveredCell{0.0f, 0.0f, 0.0f, 0.0f}
+    , m_mousePos{0.0f, 0.0f}
+    , r_widget(table)
+    , r_layersRequest(req)
+    , m_fsm{IdleTableState{ std::ref(*this)}}
+    {}
 
     // supported events
     template<GuiEventType Event>
@@ -132,26 +32,79 @@ public:
         m_fsm.process(event);
     }
 
-    // response dispatching
-    void dispatchResponse(Responses&&);
-    void render(SDL_Renderer*, const TextRenderer&) const;
-private:
-    // supported responses
-    void dispatch(MenuResponse&&);
-    void dispatch(DialogResponse&&);
-    void dispatch(PopupResponse&&){}
+    OperationView getOperationView() {
+        return std::ref(m_operation);
+    } 
 
+    void processOperation() {
+        std::visit([&](auto&& op) { perform(op); }, m_operation);
+    }
+
+    void render(SDL_Renderer* renderer, const TextRenderer& txtRenderer) const {
+        // hovered-over rectangle
+        SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
+        SDL_RenderRect(renderer, &m_hoveredCell);
+
+        // state-dependent items like helper lines
+        m_fsm.draw(renderer);
+
+        // draw spreadsheet text content
+        const auto& storage = DataStorage::get().getRawStorage();
+        for(auto&& [blockPos, block] : storage)
+            for(auto pos = 0uz; pos < block.m_data.size(); ++pos) {
+                Pos tablePos = DataStorage::getCellAbsolutePos(blockPos, pos);
+                auto dest = r_widget.get().getSpreadsheetCoordinates(tablePos);
+                txtRenderer.render(renderer, dest, block.m_data[pos].text.c_str(), block.m_data[pos].text.length());
+            }
+    }
+
+private:
+    template<typename Op>
+    void perform(Op) {}
+
+    void perform(InsertOperation op) {
+        auto& w = r_widget.get(); 
+        auto& ds = DataStorage::get();
+
+        if (w.columnSpaceContains(m_mousePos))
+            ds.insertColumn(w.insertColumn(m_mousePos.x, op.isAfter));
+        else if (w.rowSpaceContains(m_mousePos))
+            ds.insertRow(w.insertRow(m_mousePos.y, op.isAfter));
+
+        m_hoveredCell = w.selectCell(m_mousePos);
+    }
+
+    void perform(DeleteOperation) {
+        auto& w = r_widget.get(); 
+        auto& ds = DataStorage::get();
+
+        if (w.columnSpaceContains(m_mousePos))
+            ds.deleteColumn(w.deleteColumn(m_mousePos.x));
+        else if (w.rowSpaceContains(m_mousePos))
+            ds.deleteRow(w.deleteRow(m_mousePos.y));
+
+        m_hoveredCell = w.selectCell(m_mousePos);
+    }
+
+    void perform(WriteOperation op) {
+        auto& w = r_widget.get();
+        auto pos = w.getSpreadsheetPos(m_mousePos);
+        w.shiftColumns(pos.col);
+        w.shiftRows(pos.row);
+        DataStorage::get().setData(std::move(op.text), pos);
+    }
+
+    OperationRegister m_operation;
     // selection rectangle of the hovered-on cell
     SDL_FRect m_hoveredCell;
     // cached mouse position
     SDL_FPoint m_mousePos;
     // a reference to the table widget
-    TableWidgetRef m_widget;
+    TableWidgetRef r_widget;
     // a reference to the layer's request slot
-    RequestRef m_layersRequest;
+    RequestView r_layersRequest;
     // state machine
     FSM m_fsm;
-    // menu action handler
-    TableWidgetActionHandler m_handler;
 };
+
 #endif

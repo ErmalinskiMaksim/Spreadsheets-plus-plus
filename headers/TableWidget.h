@@ -5,7 +5,6 @@
 #include <SDL3/SDL_rect.h>
 #include <vector>
 
-struct SDL_Renderer;
 class TextRenderer;
 class Pos;
 

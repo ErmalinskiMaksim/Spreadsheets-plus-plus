@@ -1,13 +1,31 @@
 #ifndef HANDLERS_H
 #define HANDLERS_H
-#include "Requests.h"
-#include "Responses.h"
 
+#include "Requests.h"
+
+// global operation register. Those are the kinds of operations that 
+// are performed by the caller upon handler completion. Hanlders were 
+// initially supposed to handle static operations on global singletons 
+// but then some specific kind of operations emerged which demanded a
+// signal passing mechanism between callers and handlers.
+// TODO maybe improve later
+struct EmptyOperation {};
+struct InsertOperation { bool isAfter; };
+struct DeleteOperation {};
+struct WriteOperation { std::string text; };
+using OperationRegister = std::variant<EmptyOperation
+            , InsertOperation
+            , DeleteOperation
+            , WriteOperation
+>;
+using OperationView = std::reference_wrapper<OperationRegister>;
+     
 // bare minimum context that is necessary for 
-// an action handlet
+// an action handler
 struct HandlerContext {
-    std::reference_wrapper<OptRequest> req;
-    std::reference_wrapper<const Widget> widget;
+    Widget widget;
+    RequestView req;
+    OperationView op;
 };
 
 template<typename H, typename R>
@@ -15,6 +33,7 @@ concept CanHandleResponse =
     requires(H& h, R&& r, HandlerContext ctx) {
         { h.dispatch(static_cast<R&&>(r), ctx)} -> std::same_as<bool>;
         { H::getName() } -> std::convertible_to<std::string>;
+        { H::requestMainMenu(ctx) } -> std::same_as<bool>;
     };
 
 template<typename H, typename Variant>
@@ -46,35 +65,5 @@ struct ResponseDispatcher {
 };
 
 using EmptyResponseDispatcher = ResponseDispatcher<>;
-
-// Handles actions of the "File" menu
-class FileActionHandler {
-    // actions of the "File" menu 
-    enum class Actions : ActionID { OPEN = 0x01, SAVE = 0x02, CLOSE = 0x03 };
-public:
-    static constexpr std::string getName() { return "File"; }
-
-    // called when File menu is first invoked to display possible actions
-    bool requestMainMenu(HandlerContext);
-    // receive a chosen option from the menu
-    bool dispatch(MenuResponse&&, HandlerContext);
-    // receive the file path from the dialog
-    bool dispatch(DialogResponse&&, HandlerContext);
-private:
-    Actions m_currentAction;
-};
-
-// Handles actions of the "Help" menu
-class HelpActionHandler {
-    // acrions of the Help menu
-    enum class Actions : ActionID { VIEW_GUIDE = 0x10};
-public:
-    static constexpr std::string getName() { return "Help"; }
-
-    // called when Help menu is first invoked to display possible actions
-    bool requestMainMenu(HandlerContext);
-    // receives the chosen action.
-    bool dispatch(MenuResponse&&, HandlerContext);
-};
 
 #endif 

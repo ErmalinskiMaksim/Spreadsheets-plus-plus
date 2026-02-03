@@ -1,6 +1,7 @@
 #ifndef REQUESTS_H
 #define REQUESTS_H
 
+#include <functional>
 #include <optional>
 #include <vector>
 #include "Responses.h"
@@ -57,6 +58,7 @@ using Requests = std::variant<MenuCreateRequest
             , PopupCloseRequest
     >;  
 using OptRequest = std::optional<Requests>;
+using RequestView = std::reference_wrapper<OptRequest>;
 
 template<typename T>
 concept RequestType = std::is_same_v<T, MenuCreateRequest> 
