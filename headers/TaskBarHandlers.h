@@ -8,7 +8,7 @@ class FileActionHandler {
     // actions of the "File" menu 
     enum class Actions : ActionID { OPEN = 0x01, SAVE = 0x02, CLOSE = 0x03 };
 public:
-    static constexpr std::string getName() { return "File"; }
+    static constexpr std::string getID() { return "File"; }
 
     // request a menu when first called
     // called when File menu is first invoked to display possible actions
@@ -45,7 +45,7 @@ class HelpActionHandler {
     // actions of the Help menu
     enum class Actions : ActionID { VIEW_GUIDE = 0x10};
 public:
-    static constexpr std::string getName() { return "Help"; }
+    static constexpr std::string getID() { return "Help"; }
 
     // request a menu when first called
     // called when Help menu is first invoked to display possible actions

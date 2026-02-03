@@ -8,7 +8,7 @@ class TableOperationsActionHandler {
     // actions of the column/row  
     enum class Actions : ActionID { INSERT_AFTER = 0x20, INSERT_BEFORE = 0x21, DELETE = 0x22 };
 public:
-    static constexpr std::string getName() { return "Table ops"; }
+    static constexpr std::string getID() { return "Table ops"; }
 
     // defines the outline of the column/row insertion.deletion menu
     // leaves a request to create a menu layer
@@ -36,7 +36,7 @@ public:
 class TableCellActionHandler {
     // TODO cell menu
 public:
-    static constexpr std::string getName() { return "Table cell ops"; }
+    static constexpr std::string getID() { return "Table cell ops"; }
     static bool requestMainMenu(HandlerContext) { return true; }
     // TODO void requestMainMenu(HandlerContext);
     bool dispatch(DialogResponse&&, HandlerContext);

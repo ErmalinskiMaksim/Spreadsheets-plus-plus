@@ -74,7 +74,7 @@ add_executable (Spreadsheet "src/main.cpp" "src/Application.cpp" "src/GUI.cpp" "
     "src/Events.cpp"  
     "src/TableHandlers.cpp" "src/TaskBarHandlers.cpp"
     "src/DataStorage.cpp" "src/FileManager.cpp" "src/SpreadsheetSerializer.cpp" "src/Pos.cpp"
-    "src/TableInteractor.cpp" "src/TableStateMachine.cpp" "src/TaskBarInteractor.cpp"
+    "src/TableStateMachine.cpp" 
     "src/TableWidget.cpp" "src/Widget.cpp")
 target_compile_options(Spreadsheet PRIVATE ${BASE_FLAGS} ${STRICT_FLAGS} ${DEBUG_FLAGS})
 target_include_directories(Spreadsheet PRIVATE ${CMAKE_SOURCE_DIR}/headers ${DEPS_INCLUDE_DIRS})

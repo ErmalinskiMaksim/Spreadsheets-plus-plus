@@ -6,9 +6,10 @@
 #include "TaskBarHandlers.h"
 #include "TaskBarInteractor.h"
 // #include "TaskBarLayer.h"
-#include "ToolBarLayer.h"
+// #include "ToolBarLayer.h"
 #include "MenuLayer.h"
 #include "TableInteractor.h"
+#include "ToolBarInteractor.h"
 // #include "TableLayer.h"
 #include "PopupLayer.h"
 #include <iostream>
@@ -75,7 +76,7 @@ GUI::GUI() : m_layers(3)
             }
             , TableOperationsActionHandler{}
             , TableCellActionHandler{}); // lowest layer
-    m_layers[1] = std::make_unique<ToolBarLayer>(
+    m_layers[1] = std::make_unique<NonModalLayer<Widget, ToolBarInteractor>>(
             Widget {
                 SDL_FRect{0.0f, 0.05f * WINDOW_HEIGHT, WINDOW_WIDTH, 0.15f * WINDOW_HEIGHT}
                 , Color{0xBB, 0xBB, 0xBB, 0xFF}

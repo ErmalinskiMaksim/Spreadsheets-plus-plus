@@ -32,7 +32,7 @@ template<typename H, typename R>
 concept CanHandleResponse =
     requires(H& h, R&& r, HandlerContext ctx) {
         { h.dispatch(static_cast<R&&>(r), ctx)} -> std::same_as<bool>;
-        { H::getName() } -> std::convertible_to<std::string>;
+        { H::getID() };
         { H::requestMainMenu(ctx) } -> std::same_as<bool>;
     };
 
