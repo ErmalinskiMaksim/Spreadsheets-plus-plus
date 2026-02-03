@@ -1,10 +1,15 @@
 #include "GUI.h"
 #include "DialogLayer.h"
 #include "Requests.h"
-#include "TaskBarLayer.h"
+#include "NonModalLayer.h"
+#include "TableHandlers.h"
+#include "TaskBarHandlers.h"
+#include "TaskBarInteractor.h"
+// #include "TaskBarLayer.h"
 #include "ToolBarLayer.h"
 #include "MenuLayer.h"
-#include "TableLayer.h"
+#include "TableInteractor.h"
+// #include "TableLayer.h"
 #include "PopupLayer.h"
 #include <iostream>
 #include <variant>
@@ -60,13 +65,16 @@ GUI::GUI() : m_layers(3)
     // initialize the layers in the ascending order
     auto charWidth = m_textRenderer.getCharacterWidth();
     auto charHeight = m_textRenderer.getCharacterHeight();
-    m_layers[0] = std::make_unique<TableLayer>( 
+    m_layers[0] = std::make_unique<NonModalLayer<TableWidget, TableInteractor
+        , TableOperationsActionHandler, TableCellActionHandler>>( 
             Widget {
                 SDL_FRect{0.0f, 0.2f * WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT * 0.8f}
                 , Color{0xEE, 0xEE, 0xEE, 0xFF}
                 , charWidth
                 , charHeight
-            }); // lowest layer
+            }
+            , TableOperationsActionHandler{}
+            , TableCellActionHandler{}); // lowest layer
     m_layers[1] = std::make_unique<ToolBarLayer>(
             Widget {
                 SDL_FRect{0.0f, 0.05f * WINDOW_HEIGHT, WINDOW_WIDTH, 0.15f * WINDOW_HEIGHT}
@@ -74,7 +82,8 @@ GUI::GUI() : m_layers(3)
                 , charWidth
                 , charHeight
             }); 
-    m_layers[2] = std::make_unique<TaskBarLayer<FileActionHandler, HelpActionHandler>>(
+    m_layers[2] = std::make_unique<NonModalLayer<Widget, TaskBarInteractor,
+        FileActionHandler, HelpActionHandler>>(
             Widget {
                 SDL_FRect{0.0f, 0.0f, WINDOW_WIDTH, 0.05f * WINDOW_HEIGHT}, 
                 Color{0xCC, 0xCC, 0xCC, 0xFF},

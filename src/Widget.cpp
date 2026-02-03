@@ -1,4 +1,5 @@
 #include "Widget.h"
+#include <SDL3/SDL_render.h>
 
 Color Color::operator+(Uint8 delta) const {
     return Color(r + delta, delta + g, delta + b, a);
@@ -22,6 +23,12 @@ Widget::Widget(SDL_FRect&& hitBox, Color fillColor, float charWidth, float charH
 bool Widget::contains(float x, float y) const noexcept {
     return (x > m_hitBox.x && x <= m_hitBox.x + m_hitBox.w) 
         && (y > m_hitBox.y && y <= m_hitBox.y + m_hitBox.h);
+}
+
+void Widget::render(SDL_Renderer* renderer, const TextRenderer&) const noexcept {
+    // draw background
+    SDL_SetRenderDrawColor(renderer, m_fillColor.r, m_fillColor.g, m_fillColor.b, m_fillColor.a);
+    SDL_RenderFillRect(renderer, &m_hitBox);
 }
 
 SDL_FRect Widget::getHitBox() const noexcept {

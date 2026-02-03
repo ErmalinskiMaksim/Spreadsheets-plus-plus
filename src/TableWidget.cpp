@@ -203,8 +203,8 @@ void TableWidget::shiftRows(size_t begin) {
     }
 }
 
-void TableWidget::resizeColumnLabel(float begin, float delta) {
-    auto idx = m_cols.getLabelFromPos(begin).first;
+void TableWidget::resizeColumnLabel(float cellPos, float delta) {
+    auto idx = m_cols.getLabelFromPos(cellPos).first;
     // if a virtual label is resized
     if (idx >= m_cols.labels.size()) shiftColumns(idx);
     m_cols.labels[idx].dimension = std::max(m_cols.labels[idx].dimension + delta
@@ -212,8 +212,8 @@ void TableWidget::resizeColumnLabel(float begin, float delta) {
     updateColumnGridLines();       
 }
 
-void TableWidget::resizeRowLabel(float begin, float delta) {
-    auto idx = m_rows.getLabelFromPos(begin).first;
+void TableWidget::resizeRowLabel(float cellPos, float delta) {
+    auto idx = m_rows.getLabelFromPos(cellPos).first;
     // if a virtual label is resized
     if (idx >= m_rows.labels.size()) shiftRows(idx);
     m_rows.labels[idx].dimension = std::max(m_rows.labels[idx].dimension + delta
