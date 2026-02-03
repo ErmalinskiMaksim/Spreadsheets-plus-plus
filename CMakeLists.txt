@@ -70,10 +70,12 @@ set(RELEASE_LIBS -flto)
 pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET GLOBAL sdl3 sdl3-image sdl3-ttf)
 
 add_executable (Spreadsheet "src/main.cpp" "src/Application.cpp" "src/GUI.cpp" "src/TextRenderer.cpp"
-    "src/Layer.cpp" "src/TaskBarLayer.cpp" "src/TableLayer.cpp" "src/ToolBarLayer.cpp" "src/MenuLayer.cpp" "src/DialogLayer.cpp" "src/PopupLayer.cpp"
-    "src/Events.cpp" "src/Handlers.cpp" 
+    "src/Layer.cpp"  "src/ToolBarLayer.cpp" "src/MenuLayer.cpp" "src/DialogLayer.cpp" "src/PopupLayer.cpp"
+    "src/Events.cpp"  
+    "src/TableHandlers.cpp" "src/TaskBarHandlers.cpp"
     "src/DataStorage.cpp" "src/FileManager.cpp" "src/SpreadsheetSerializer.cpp" "src/Pos.cpp"
-    "src/TableInteractor.cpp" "src/TableWidget.cpp" "src/Widget.cpp")
+    "src/TableInteractor.cpp" "src/TableStateMachine.cpp" "src/TaskBarInteractor.cpp"
+    "src/TableWidget.cpp" "src/Widget.cpp")
 target_compile_options(Spreadsheet PRIVATE ${BASE_FLAGS} ${STRICT_FLAGS} ${DEBUG_FLAGS})
 target_include_directories(Spreadsheet PRIVATE ${CMAKE_SOURCE_DIR}/headers ${DEPS_INCLUDE_DIRS})
 add_compile_options(-fdebug-prefix-map=${CMAKE_SOURCE_DIR}=.)   
