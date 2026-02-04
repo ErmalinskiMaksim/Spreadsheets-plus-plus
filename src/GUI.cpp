@@ -3,7 +3,6 @@
 #include "ILayer.h"
 #include "Layer.h"
 // handlers
-#include "Requests.h"
 #include "TaskBarHandlers.h"
 // interactors
 #include "TaskBarInteractor.h"
@@ -19,7 +18,7 @@
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 600;
 constexpr SDL_InitFlags SDL_FLAGS = SDL_INIT_VIDEO;
-constexpr const char *WINDOW_TITLE = "Spreadsheet";
+constexpr const char *WINDOW_TITLE = "Spreadsheets++";
 
 GUI::GUI() : m_layers(3)
             , m_focusStack(1)
@@ -67,7 +66,7 @@ GUI::GUI() : m_layers(3)
     auto charWidth = m_textRenderer.getCharacterWidth();
     auto charHeight = m_textRenderer.getCharacterHeight();
     m_layers[0] = std::make_unique
-        <Layer<TableWidget, TableInteractor, NonModalLayerCreateRequest, false
+        <Layer<TableWidget, TableInteractor, NonModalLayerCreateRequest
         , TableOperationsActionHandler, TableCellActionHandler>>( 
             NonModalLayerCreateRequest{
                 Widget {
@@ -80,7 +79,7 @@ GUI::GUI() : m_layers(3)
             , TableOperationsActionHandler{}
             , TableCellActionHandler{}); // lowest layer
     m_layers[1] = std::make_unique
-        <Layer<Widget, ToolBarInteractor, NonModalLayerCreateRequest, false>>(
+        <Layer<Widget, ToolBarInteractor, NonModalLayerCreateRequest>>(
             NonModalLayerCreateRequest{
                 Widget {
                     SDL_FRect{0.0f, 0.05f * WINDOW_HEIGHT, WINDOW_WIDTH, 0.15f * WINDOW_HEIGHT}
@@ -90,7 +89,7 @@ GUI::GUI() : m_layers(3)
                     , charHeight
                 }, NonModalLayerCreateRequest::Payload{}}); 
     m_layers[2] = std::make_unique
-        <Layer<Widget, TaskBarInteractor, NonModalLayerCreateRequest, false
+        <Layer<Widget, TaskBarInteractor, NonModalLayerCreateRequest
         , FileActionHandler, HelpActionHandler>>(
             NonModalLayerCreateRequest{
                 Widget {
@@ -220,13 +219,13 @@ bool GUI::processRequests() {
     // if a layer 
     if (auto* menuReq = std::get_if<MenuCreateRequest>(&*req)) {
         m_layers.push_back(std::make_unique
-                <Layer<Widget, MenuInteractor, MenuCreateRequest, true>>(std::move(*menuReq)));
+                <Layer<Widget, MenuInteractor, MenuCreateRequest>>(std::move(*menuReq)));
     } else if (auto* dialogReq = std::get_if<DialogCreateRequest>(&*req)) {
         m_layers.push_back(std::make_unique
-                <Layer<Widget, DialogInteractor, DialogCreateRequest, true>>(std::move(*dialogReq)));
+                <Layer<Widget, DialogInteractor, DialogCreateRequest>>(std::move(*dialogReq)));
     } else if (auto* popupReq = std::get_if<PopupCreateRequest>(&*req)) {
         m_layers.push_back(std::make_unique
-                <Layer<Widget, PopupInteractor, PopupCreateRequest, true>>(std::move(*popupReq)));
+                <Layer<Widget, PopupInteractor, PopupCreateRequest>>(std::move(*popupReq)));
     } 
     // false == a new layer that was created first must process events before 
     // making requests, thus no chain of requests

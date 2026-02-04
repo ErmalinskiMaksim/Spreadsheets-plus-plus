@@ -12,6 +12,8 @@ class TaskBarInteractor {
 
     template <std::size_t I>
     using Handler = std::tuple_element_t<I, std::tuple<Handlers...>>;
+    using TaskNames = std::array<std::string_view, sizeof...(Handlers)>; 
+    using Buttons = std::array<SDL_FRect, sizeof...(Handlers)>;
 public:
     TaskBarInteractor(NonModalLayerCreateRequest::Payload&&, WidgetView widget, RequestView req) 
     : m_tasks{Handlers::getID()...}
@@ -43,7 +45,7 @@ public:
     void render(SDL_Renderer* const renderer, const TextRenderer& textRenderer) const {
         // render button text
         for (auto i = 0uz; i < m_tasks.size(); ++i) 
-            textRenderer.render(renderer, m_buttons[i], m_tasks[i].c_str(), m_tasks[i].length());
+            textRenderer.render(renderer, m_buttons[i], m_tasks[i].data(), m_tasks[i].length());
     }
 private:
     template<size_t... Is>
@@ -55,9 +57,9 @@ private:
     }
 
     // text names of menu buttons
-    std::array<std::string, sizeof...(Handlers)> m_tasks;
+    TaskNames m_tasks;
     // menu buttons' hit boxes
-    std::array<SDL_FRect, sizeof...(Handlers)> m_buttons;
+    Buttons m_buttons;
 
     OperationRegister m_operation;
     WidgetView r_widget;

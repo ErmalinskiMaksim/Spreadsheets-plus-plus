@@ -21,10 +21,10 @@ Widget::Widget(SDL_FRect&& hitBox, Color fillColor, Color outlineColor, float ch
       , m_charHeight(charHeight)
 {}
 
-bool Widget::contains(float x, float y) const noexcept {
-    return (x > m_hitBox.x && x <= m_hitBox.x + m_hitBox.w) 
-        && (y > m_hitBox.y && y <= m_hitBox.y + m_hitBox.h);
-}
+// constexpr bool Widget::contains(float x, float y) const noexcept {
+//     return (x > m_hitBox.x && x <= m_hitBox.x + m_hitBox.w) 
+//         && (y > m_hitBox.y && y <= m_hitBox.y + m_hitBox.h);
+// }
 
 void Widget::render(SDL_Renderer* renderer, const TextRenderer&) const noexcept {
     // draw background

@@ -7,7 +7,6 @@
 template<WidgetType MainWidget
         , template<typename, typename...> class Interactor
         , CreateRequestType CreateRequest
-        , bool isModal
         , ResponseHandler... Handlers>
 class Layer final : public ILayer {
 public:
@@ -30,7 +29,7 @@ public:
 
     // dispatch responses to a correct action handler
     void onResponse(Responses&& resp) override {
-        if constexpr (!isModal) {
+        if constexpr (std::is_same_v<CreateRequest, NonModalLayerCreateRequest>) {
             std::apply([&](auto&... handlers) {
                 m_dispatcher.dispatch(
                     std::move(resp)
@@ -42,8 +41,8 @@ public:
         }
     }
 
-    bool hitTest(float x, float y) const noexcept override {
-        if constexpr (!isModal) {
+    constexpr bool hitTest(float x, float y) const noexcept override {
+        if constexpr (std::is_same_v<CreateRequest, NonModalLayerCreateRequest>) {
             return m_widget.contains(x, y);
         } else return true;
     }
@@ -54,8 +53,9 @@ protected:
     Interactor<MainWidget, Handlers...> m_interactor;
 
     // action handlers of the layer and a dispatcher for handlers
-    std::tuple<Handlers...> m_handlers;
-    ResponseDispatcher<Handlers...> m_dispatcher;
+    // If a layer is modal, then they should not exist
+    [[no_unique_address]] std::tuple<Handlers...> m_handlers;
+    [[no_unique_address]] ResponseDispatcher<Handlers...> m_dispatcher;
 };
 
 #endif

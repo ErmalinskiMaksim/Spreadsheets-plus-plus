@@ -37,7 +37,7 @@ public:
         auto dy = textRenderer.getCharacterHeight();
         for (auto i = 0uz; i < m_entries.size(); ++i) 
             textRenderer.render(renderer, { hbox.x, hbox.y + static_cast<float>(i)*dy, hbox.w, dy}
-                    , m_entries[i].text.c_str(), m_entries[i].text.length());
+                    , m_entries[i].text.data(), m_entries[i].text.length());
     }
 private:
     Entries m_entries; 

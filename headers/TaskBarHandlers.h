@@ -7,27 +7,31 @@
 class FileActionHandler {
     // actions of the "File" menu 
     enum class Actions : ActionID { OPEN = 0x01, SAVE = 0x02, CLOSE = 0x03 };
+    
+    static consteval auto buildPayload() {
+        using MenuAction = MenuCreateRequest::Payload::MenuAction;
+        return std::array<MenuAction, 3> {
+                MenuAction{"Open", static_cast<ActionID>(Actions::OPEN) }
+              , MenuAction{"Save", static_cast<ActionID>(Actions::SAVE) }
+              , MenuAction{"Close", static_cast<ActionID>(Actions::CLOSE)}
+        };
+    }
+
 public:
-    static constexpr std::string getID() { return "File"; }
+    static constexpr std::string_view getID() { return "File"; }
 
     // request a menu when first called
     // called when File menu is first invoked to display possible actions
     static bool requestMainMenu(HandlerContext ctx) {
-        using MenuAction = MenuCreateRequest::Payload::MenuAction;
+        constexpr auto payload = buildPayload(); 
 
-        auto& req = ctx.req.get();
         auto hbox = ctx.widget.getHitBox();
-
-        req = MenuCreateRequest{
+        ctx.req.get() = MenuCreateRequest{
             Widget {
                  SDL_FRect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 5, ctx.widget.getCharHeight() * 3}
                 , ctx.widget.getFillColor() 
             }
-            , MenuCreateRequest::Payload{{
-                MenuAction{"Open", static_cast<ActionID>(Actions::OPEN) }
-              , MenuAction{"Save", static_cast<ActionID>(Actions::SAVE) }
-              , MenuAction{"Close", static_cast<ActionID>(Actions::CLOSE)}
-            }}}; 
+            , MenuCreateRequest::Payload{{std::begin(payload), std::end(payload)}}}; 
 
         return true;
     }
@@ -44,25 +48,29 @@ private:
 class HelpActionHandler {
     // actions of the Help menu
     enum class Actions : ActionID { VIEW_GUIDE = 0x10};
+
+    static consteval auto buildPayload() {
+        using MenuAction = MenuCreateRequest::Payload::MenuAction;
+        return std::array<MenuAction, 1> {
+            MenuAction{"View Guide", static_cast<ActionID>(Actions::VIEW_GUIDE)}
+        };
+    } 
+
 public:
-    static constexpr std::string getID() { return "Help"; }
+    static constexpr std::string_view getID() { return "Help"; }
 
     // request a menu when first called
     // called when Help menu is first invoked to display possible actions
     static bool requestMainMenu(HandlerContext ctx) {
-        using MenuAction = MenuCreateRequest::Payload::MenuAction;
+        constexpr auto payload = buildPayload();
 
-        auto& req = ctx.req.get();
         auto hbox = ctx.widget.getHitBox();
-
-        req = MenuCreateRequest{
+        ctx.req.get() = MenuCreateRequest{
                 Widget {
                     SDL_FRect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 10, ctx.widget.getCharHeight() }
                   , ctx.widget.getFillColor()
                 }
-                , MenuCreateRequest::Payload{{
-                    MenuAction{"View Guide", static_cast<ActionID>(Actions::VIEW_GUIDE)}
-                }}}; 
+                , MenuCreateRequest::Payload{{std::begin(payload), std::end(payload)}}}; 
 
         return true;
     }

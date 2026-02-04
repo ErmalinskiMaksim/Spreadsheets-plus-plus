@@ -10,7 +10,7 @@ class DialogInteractor {
     using WidgetView = std::reference_wrapper<MainWidget>;
 public:
     DialogInteractor(DialogCreateRequest::Payload&& payload, WidgetView widget, RequestView req) 
-    : m_title{std::move(payload.title)}
+    : m_title{payload.title}
     , m_input{payload.initInput ? std::move(payload.initInput) : ""}
     , r_widget{widget}
     , r_pendingRequest{req}
@@ -43,12 +43,12 @@ public:
 
         //  if there is no title draw input text at the top, else below the title
         auto dy = (m_title) ? textRenderer.getCharacterHeight() : 0;
-        if (m_title) textRenderer.render(renderer, hbox, m_title->c_str(), m_title->length());
+        if (m_title) textRenderer.render(renderer, hbox, m_title->data(), m_title->length());
         textRenderer.render(renderer, {hbox.x, hbox.y+dy, hbox.w, hbox.h}, m_input->c_str(),  m_input->length());
     }
 private:
     // title of the dialog (may or may not be)
-    std::optional<std::string> m_title;
+    std::optional<std::string_view> m_title;
     // input text (can either be filled at first or empty)
     std::optional<std::string> m_input;
 

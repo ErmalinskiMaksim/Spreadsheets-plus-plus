@@ -2,6 +2,7 @@
 #define REQUESTS_H
 
 #include <functional>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 #include <optional>
@@ -26,7 +27,7 @@ struct NonModalLayerCreateRequest {
 struct MenuCreateRequest {
     struct Payload {
         struct MenuAction {
-            std::string text;
+            std::string_view text;
             ActionID id;
         };
         std::vector<MenuAction> entries;
@@ -41,8 +42,8 @@ struct MenuCloseRequest {
 
 struct DialogCreateRequest {
     struct Payload {
-        std::optional<std::string> title;
-        std::optional<std::string> initInput;
+        std::optional<std::string_view> title;
+        std::optional<std::string_view> initInput;
         uint8_t maxInputLen;
     };
     Widget widget;
@@ -55,7 +56,7 @@ struct DialogCloseRequest {
 
 struct PopupCreateRequest {
     struct Payload {
-        std::vector<std::string> lines;
+        std::vector<std::string_view> lines;
     };
     Widget widget;
     Payload payload; 

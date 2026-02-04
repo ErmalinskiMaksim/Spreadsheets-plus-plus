@@ -1,13 +1,31 @@
 #include "TaskBarHandlers.h"
 #include "FileManager.h"
 
+// can't be hidden because it's mentioned in FileManager
+consteval auto buildFilePathDialogPayload() {
+    return DialogCreateRequest::Payload{
+         "Enter the file path:"
+        , std::nullopt
+        , FileManager::MAX_FILE_PATH_LEN
+    };
+}
+
+static consteval auto buildHelpPopUpPayload() {
+    return std::array<std::string_view, 5> {
+         "Write to a cell:     LMB click"
+       , "Commit text input:   Enter"
+       , "Resize a row/column: hold LMB+CTRL"
+       , "Exit application:    CTRL-Q"
+       , "Exit this pop-up:    LMB click"
+    };
+}
+
 // Recap.
 // Recieve response from the menu:
 // OPEN/SAVE ---> request a dialog
 // CLOSE     ---> close the current file
 // none      ---> do nothing
 bool FileActionHandler::dispatch(MenuResponse&& resp, HandlerContext ctx) {
-    auto& req = ctx.req.get();
     auto hbox = ctx.widget.getHitBox();
     auto color = ctx.widget.getFillColor();
     auto charWidth = ctx.widget.getCharWidth();
@@ -18,7 +36,7 @@ bool FileActionHandler::dispatch(MenuResponse&& resp, HandlerContext ctx) {
         case Actions::OPEN:
             [[fallthrough]];
         case Actions::SAVE:
-            req =  
+            ctx.req.get() =  
                 DialogCreateRequest{ 
                     Widget{ SDL_FRect{hbox.x, hbox.y + hbox.h, hbox.w, charHeight * 2}
                         , color - 0x11 
@@ -26,11 +44,7 @@ bool FileActionHandler::dispatch(MenuResponse&& resp, HandlerContext ctx) {
                         , charWidth
                         , charHeight
                     }
-                    , DialogCreateRequest::Payload{
-                         "Enter the file path:"
-                        , std::nullopt
-                        , FileManager::MAX_FILE_PATH_LEN 
-                    }};
+                    , buildFilePathDialogPayload()};
             break;
         case Actions::CLOSE:
             DataStorage::get().clear();
@@ -68,23 +82,17 @@ bool FileActionHandler::dispatch(DialogResponse&& resp, HandlerContext) {
 // * VIEW_GUIDE ---> requests a pop-up with information
 // * others     ---> do nothing
 bool HelpActionHandler::dispatch(MenuResponse&& resp, HandlerContext ctx) {
-    auto& req = ctx.req.get();
-    auto hbox = ctx.widget.getHitBox();
+    constexpr auto payload = buildHelpPopUpPayload();
 
+    auto hbox = ctx.widget.getHitBox();
     switch (static_cast<Actions>(resp.code)) {
         case Actions::VIEW_GUIDE:
-            req = PopupCreateRequest{
+            ctx.req.get() = PopupCreateRequest{
                 Widget {
                     SDL_FRect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth()*34, ctx.widget.getCharHeight()*5}
                     , ctx.widget.getFillColor() - 0x11
                 }
-                , PopupCreateRequest::Payload{{ 
-                    "Write to a cell:     LMB click"
-                  , "Commit text input:   Enter"
-                  , "Resize a row/column: hold LMB+CTRL"
-                  , "Exit application:    CTRL-Q"
-                  , "Exit this pop-up:    LMB click"
-                }}};
+                , PopupCreateRequest::Payload{{std::begin(payload), std::end(payload)}}};
             break;
         default: 
             return false;

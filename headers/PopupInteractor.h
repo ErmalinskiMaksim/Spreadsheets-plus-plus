@@ -8,7 +8,7 @@
 template<WidgetType MainWidget>
 class PopupInteractor {
     using WidgetView = std::reference_wrapper<MainWidget>;
-    using TextLines = std::vector<std::string>;
+    using TextLines = decltype(PopupCreateRequest::Payload::lines);
 public:
     PopupInteractor(PopupCreateRequest::Payload&& payload, WidgetView widget, RequestView req) 
     : m_text{std::move(payload.lines)}
@@ -32,7 +32,7 @@ public:
         auto dy = textRenderer.getCharacterHeight();
         for (auto i = 0uz; i < m_text.size(); ++i) 
             textRenderer.render(renderer, { hbox.x, hbox.y + static_cast<float>(i)*dy, hbox.w, dy}
-                    , m_text[i].c_str(), m_text[i].length());
+                    , m_text[i].data(), m_text[i].length());
     }
 private:
     TextLines m_text;

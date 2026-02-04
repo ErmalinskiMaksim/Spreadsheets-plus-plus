@@ -7,6 +7,7 @@
 // The main file managing class
 class FileManager {
     friend class FileActionHandler;
+    friend consteval auto buildFilePathDialogPayload();
     static inline constexpr uint8_t MAX_FILE_PATH_LEN = 64;
     // save spreadsheet to file
     static bool saveSpreadsheet(const std::string& filePath, const Serializer& serializer) {

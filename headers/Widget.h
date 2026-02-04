@@ -34,7 +34,11 @@ public:
            , float charWidth = 0.0f, float charHeight = 0.0f
            );
 
-    bool contains(float, float) const noexcept;
+    constexpr bool contains(float x, float y) const noexcept {
+        return (x > m_hitBox.x && x <= m_hitBox.x + m_hitBox.w) 
+            && (y > m_hitBox.y && y <= m_hitBox.y + m_hitBox.h);
+    }
+
     static bool contains(float x, float y, const SDL_FRect& rect) noexcept {
         return (x > rect.x && x <= rect.x + rect.w) && (y > rect.y && y <= rect.y + rect.h); 
     }
