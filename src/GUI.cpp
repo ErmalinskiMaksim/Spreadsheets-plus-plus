@@ -1,6 +1,5 @@
 #include "GUI.h"
 // layers
-#include "ILayer.h"
 #include "Layer.h"
 // handlers
 #include "TaskBarHandlers.h"
@@ -137,51 +136,47 @@ bool GUI::processEvents() {
     // wait for SDL events
     SDL_Event SDLEvent;
     SDL_WaitEvent(&SDLEvent);
-    
+
     // convert SDL event to internal event
-    if (auto guiEvent = translateEvent(SDLEvent)) {
-        // if quit -> return immediately 
-        if (std::holds_alternative<QuitEvent>(*guiEvent))
+    auto guiEvent = translateEvent(SDLEvent);
+    if (!guiEvent) return true;
+    
+    return std::visit([&](auto&& ev) {
+        using T = std::decay_t<decltype(ev)>;
+
+        if constexpr (std::is_same_v<T, QuitEvent>)
             return false;
         // if event logically can propagate through layers
-        else if (std::holds_alternative<MouseLeftUpEvent>(*guiEvent)
-                || std::holds_alternative<MouseLeftDownEvent>(*guiEvent)
-                || std::holds_alternative<MouseRightUpEvent>(*guiEvent)
-                || std::holds_alternative<MouseMotionEvent>(*guiEvent)) { 
-            std::visit([&](auto&& ev){
-                using T = std::decay_t<decltype(ev)>;
-                if constexpr (std::is_same_v<T, MouseLeftUpEvent> 
-                        || std::is_same_v<T, MouseLeftDownEvent>
+        else if constexpr (std::is_same_v<T, MouseLeftDownEvent>
+                        || std::is_same_v<T, MouseLeftUpEvent>
                         || std::is_same_v<T, MouseRightUpEvent>
                         || std::is_same_v<T, MouseMotionEvent>) {
-                    // find a target layer that must consume the event and quit
-                    ILayer* target = nullptr;
-                    for (auto it = m_layers.rbegin(); it != m_layers.rend(); ++it) {
-                        // event consumption is hit test based
-                        if ((*it)->hitTest(ev.x, ev.y)) {
-                            // set focus to this layer
-                            target = it->get();
-                            setFocus(target);
-                            // let the layer consume the event
-                            target->dispatchEvents(*guiEvent);
-                            break;  
-                        }
-                    }
+            // find a target layer that must consume the event and quit
+            ILayer* target = nullptr;
+            for (auto it = m_layers.rbegin(); it != m_layers.rend(); ++it) {
+                // event consumption is hit test based
+                if ((*it)->hitTest(ev.x, ev.y)) {
+                    // set focus to this layer
+                    target = it->get();
+                    setFocus(target);
+                    // let the layer consume the event
+                    target->dispatchEvents(ev);
+                    break;  
                 }
-            }, *guiEvent);
-        } // if an event should not logically propagate and should 
-          // always be consumed by the focused layer
-        else if (std::holds_alternative<KeyUpEvent>(*guiEvent)
-                || std::holds_alternative<TextInputEvent>(*guiEvent)
-                || std::holds_alternative<MouseScrollingEvent>(*guiEvent)) {
+            }
+        }// if an event should not logically propagate  
+        else if constexpr (std::is_same_v<T, MouseScrollingEvent>
+                        || std::is_same_v<T, TextInputEvent>
+                        || std::is_same_v<T, KeyUpEvent>) {
             if (ILayer* layer = getFocusedLayer())
-                layer->dispatchEvents(*guiEvent);
+                layer->dispatchEvents(ev);
         }
-    }
+        
+        // requests can be chained
+        while (processRequests());
 
-    // requests can be chained
-    while (processRequests());
-    return true;
+        return true;
+    }, *guiEvent);    
 }
 
 bool GUI::processRequests() {

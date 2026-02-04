@@ -13,19 +13,21 @@ struct EmptyOperation {};
 struct InsertOperation { bool isAfter; };
 struct DeleteOperation {};
 struct WriteOperation { std::string text; };
+
 using OperationRegister = std::variant<EmptyOperation
             , InsertOperation
             , DeleteOperation
             , WriteOperation
 >;
 using OperationView = std::reference_wrapper<OperationRegister>;
+using OptOperationView = std::optional<OperationView>;
      
 // bare minimum context that is necessary for 
 // an action handler
 struct HandlerContext {
     Widget widget;
     RequestView req;
-    OperationView op;
+    OptOperationView op = std::nullopt;
 };
 
 template<typename H, typename R>

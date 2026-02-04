@@ -1,12 +1,12 @@
 #ifndef DIALOG_INTERACTOR_H
 #define DIALOG_INTERACTOR_H
 
-#include "Events.h"
+#include "Interactor.h"
 #include "Requests.h"
 #include "Widget.h"
 
 template<WidgetType MainWidget>
-class DialogInteractor {
+class DialogInteractor : public Interactor {
     using WidgetView = std::reference_wrapper<MainWidget>;
 public:
     DialogInteractor(DialogCreateRequest::Payload&& payload, WidgetView widget, RequestView req) 
@@ -17,10 +17,22 @@ public:
     , m_maxInputLen{payload.maxInputLen}
     {}
 
-    template<GuiEventType Event>
-    void processEvents(const Event&) {}
+    void dispatchEvents(const LayerEvent& event) {
+        std::visit([&](auto&& ev) { processEvents(ev); }, event);
+    }
 
+    void render(SDL_Renderer* renderer, const TextRenderer& textRenderer) const {
+        auto hbox = r_widget.get().getHitBox();
+
+        //  if there is no title draw input text at the top, else below the title
+        auto dy = (m_title) ? textRenderer.getCharacterHeight() : 0;
+        if (m_title) textRenderer.render(renderer, hbox, m_title->data(), m_title->length());
+        textRenderer.render(renderer, {hbox.x, hbox.y+dy, hbox.w, hbox.h}, m_input->c_str(),  m_input->length());
+    }
+private:
+    using Interactor::processEvents;
     void processEvents(const KeyUpEvent& event) {
+        // TODO add shift+enter = new line
         // enter = finish the dialog 
         // backspace = delete last character
         if(event.key == SDLK_RETURN) {
@@ -37,16 +49,7 @@ public:
         if (m_input && m_input->length() < m_maxInputLen)
             m_input->append(event.text);
     }
-
-    void render(SDL_Renderer* renderer, const TextRenderer& textRenderer) const {
-        auto hbox = r_widget.get().getHitBox();
-
-        //  if there is no title draw input text at the top, else below the title
-        auto dy = (m_title) ? textRenderer.getCharacterHeight() : 0;
-        if (m_title) textRenderer.render(renderer, hbox, m_title->data(), m_title->length());
-        textRenderer.render(renderer, {hbox.x, hbox.y+dy, hbox.w, hbox.h}, m_input->c_str(),  m_input->length());
-    }
-private:
+    
     // title of the dialog (may or may not be)
     std::optional<std::string_view> m_title;
     // input text (can either be filled at first or empty)

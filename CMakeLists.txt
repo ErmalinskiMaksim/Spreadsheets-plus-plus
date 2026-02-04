@@ -71,7 +71,6 @@ pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET GLOBAL sdl3 sdl3-image sdl3-ttf)
 
 add_executable (Spreadsheet "src/main.cpp" "src/Application.cpp" "src/GUI.cpp" "src/TextRenderer.cpp"
     "src/ILayer.cpp"  
-    "src/Events.cpp"  
     "src/TableHandlers.cpp" "src/TaskBarHandlers.cpp"
     "src/DataStorage.cpp" "src/SpreadsheetSerializer.cpp" "src/Pos.cpp"
     "src/TableStateMachine.cpp" 

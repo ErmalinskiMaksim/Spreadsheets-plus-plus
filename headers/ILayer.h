@@ -14,7 +14,7 @@ class TextRenderer;
 class ILayer {
 public:
     // dispatch events passed from GUI
-    virtual void dispatchEvents(const GuiEvent&) = 0;
+    virtual void dispatchEvents(const LayerEvent&) = 0;
     // draw widgets
     virtual void draw(SDL_Renderer* const, const TextRenderer&) const = 0;
     // react to responses to requests

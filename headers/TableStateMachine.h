@@ -9,7 +9,6 @@ template<WidgetType, ResponseHandler, ResponseHandler>
 class TableInteractor;
 using DefaultTableInteractor = TableInteractor<TableWidget, TableOperationsActionHandler, TableCellActionHandler>;
 
-
 class IdleTableState;
 class ColumnResizingTableState;
 class RowResizingTableState;
@@ -32,7 +31,7 @@ public:
     explicit BaseTableState(std::reference_wrapper<DefaultTableInteractor> context) 
         : m_context(context) {}
     // supported events
-    template<GuiEventType Event>
+    template<LayerEventType Event>
     OptState process(const Event&);
 protected:
     // Table interactor reference
@@ -79,7 +78,7 @@ public:
 };
 
 // nothing by default
-template<GuiEventType Event>
+template<LayerEventType Event>
 OptState BaseTableState::process(const Event&) {
     return OptState{};
 }
@@ -92,14 +91,14 @@ public:
     explicit TableStateMachine(InitialState&& state) 
         : m_state(std::forward<InitialState>(state)) {}
     // dispatches states 
-    template<GuiEventType Event>
+    template<LayerEventType Event>
     void process(const Event& event) {
         auto optResult = std::visit([&](auto& state) { return state.process(event); }, m_state);
         if (optResult) m_state = std::move(*optResult);
     }
     // dispatches states
     void draw(SDL_Renderer* const renderer) const {
-        std::visit([&](auto& state) { return state.draw(renderer); }, m_state);
+        std::visit([&](auto&& state) { return state.draw(renderer); }, m_state);
     }
 private:
     std::variant<States...> m_state;

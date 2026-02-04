@@ -2,20 +2,24 @@
 #define TABLE_INTERACTOR_H
 
 #include "Handlers.h"
+#include "Interactor.h"
 #include "TableStateMachine.h"
 #include "DataStorage.h"
 
 // A layer of indirection between layer event processing and the table widget
-template<WidgetType MainWidget = TableWidget, 
-    ResponseHandler H1 = TableOperationsActionHandler, ResponseHandler H2 = TableCellActionHandler>
-class TableInteractor {
+template<WidgetType MainWidget = TableWidget
+        , ResponseHandler TableOps = TableOperationsActionHandler
+        , ResponseHandler CellOps = TableCellActionHandler>
+class TableInteractor : public Interactor {
     friend class IdleTableState;
     friend class ColumnResizingTableState;
     friend class RowResizingTableState;
-
+    
     using TableWidgetRef = std::reference_wrapper<MainWidget>;
     using FSM = TableStateMachine<IdleTableState, ColumnResizingTableState, RowResizingTableState>; 
 public:
+    static constexpr bool hasOperations = true;
+
     TableInteractor(NonModalLayerCreateRequest::Payload&&, TableWidgetRef table, RequestView req)
     : m_operation{EmptyOperation{}} 
     , m_hoveredCell{0.0f, 0.0f, 0.0f, 0.0f}
@@ -25,18 +29,24 @@ public:
     , m_fsm{IdleTableState{ std::ref(*this)}}
     {}
 
-    // supported events
-    template<GuiEventType Event>
-    void processEvents(const Event& event) {
-        m_fsm.process(event);
+    void dispatchEvents(const LayerEvent& event) {
+        std::visit([&](auto&& ev) { m_fsm.process(ev); }, event);
     }
-
-    OperationView getOperationView() {
+    
+    OperationView getOperation() {
         return std::ref(m_operation);
     } 
 
     void processOperation() {
-        std::visit([&](auto&& op) { perform(op); }, m_operation);
+        std::visit([&](auto&& op) { 
+            using T = std::decay_t<decltype(op)>;
+            if constexpr (std::is_same_v<T, InsertOperation>
+                        || std::is_same_v<T, DeleteOperation>
+                        || std::is_same_v<T, WriteOperation>) {
+                perform(op); 
+                m_operation = EmptyOperation{};
+            } 
+        }, m_operation);
     }
 
     void render(SDL_Renderer* renderer, const TextRenderer& txtRenderer) const {
@@ -58,9 +68,6 @@ public:
     }
 
 private:
-    template<typename Op>
-    void perform(Op) {}
-
     void perform(InsertOperation op) {
         auto& w = r_widget.get(); 
         auto& ds = DataStorage::get();
@@ -71,6 +78,7 @@ private:
             ds.insertRow(w.insertRow(m_mousePos.y, op.isAfter));
 
         m_hoveredCell = w.selectCell(m_mousePos);
+        
     }
 
     void perform(DeleteOperation) {

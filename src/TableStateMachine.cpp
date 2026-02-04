@@ -41,7 +41,7 @@ OptState IdleTableState::process(const MouseRightUpEvent& event) {
         auto ctxRect = c.m_hoveredCell;
         TableOperationsActionHandler::requestMainMenu(HandlerContext{
             Widget{std::move(ctxRect), w.getFillColor(), w.getOutlineColor(), w.getCharWidth(), w.getCharHeight()}
-            , c.r_layersRequest, c.getOperationView() });    
+            , c.r_layersRequest, c.getOperation() });    
     } // else if (w.spreadsheetSpaceContains(c.m_mousePos)) { cell menu } 
     return std::nullopt;
 }

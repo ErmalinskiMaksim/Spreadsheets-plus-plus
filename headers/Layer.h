@@ -9,6 +9,7 @@ template<WidgetType MainWidget
         , CreateRequestType CreateRequest
         , ResponseHandler... Handlers>
 class Layer final : public ILayer {
+    using InteractorType = Interactor<MainWidget, Handlers...>;
 public:
     Layer (CreateRequest&& req, Handlers&&... handlers)
     : m_widget(std::move(req.widget))
@@ -18,8 +19,8 @@ public:
     {}
 
     /// Layer's interface ///
-    void dispatchEvents(const GuiEvent& event) override {
-        std::visit([&](auto&& ev) { m_interactor.processEvents(ev); }, event);
+    void dispatchEvents(const LayerEvent& event) override {
+        m_interactor.dispatchEvents(event);
     }
 
     void draw(SDL_Renderer* const renderer, const TextRenderer& textRenderer) const override {
@@ -30,14 +31,24 @@ public:
     // dispatch responses to a correct action handler
     void onResponse(Responses&& resp) override {
         if constexpr (std::is_same_v<CreateRequest, NonModalLayerCreateRequest>) {
-            std::apply([&](auto&... handlers) {
-                m_dispatcher.dispatch(
-                    std::move(resp)
-                    , HandlerContext{ std::ref(m_widget), std::ref(m_pendingRequest), m_interactor.getOperationView()}
-                    , handlers...
-                    );
-                }, m_handlers);
-            m_interactor.processOperation();
+            if constexpr (InteractorType::hasOperations) {
+                std::apply([&](auto&... handlers) {
+                    m_dispatcher.dispatch(
+                        std::move(resp)
+                        , HandlerContext{ std::ref(m_widget), std::ref(m_pendingRequest), m_interactor.getOperation()}
+                        , handlers...
+                        );
+                    }, m_handlers);
+                    m_interactor.processOperation();
+                } else {
+                    std::apply([&](auto&... handlers) {
+                    m_dispatcher.dispatch(
+                        std::move(resp)
+                        , HandlerContext{ std::ref(m_widget), std::ref(m_pendingRequest)}
+                        , handlers...
+                        );
+                    }, m_handlers);
+            }
         }
     }
 
@@ -50,7 +61,7 @@ protected:
     // main widget of the layer
     MainWidget m_widget;
     // main interactor of the layer with the widget
-    Interactor<MainWidget, Handlers...> m_interactor;
+    InteractorType m_interactor;
 
     // action handlers of the layer and a dispatcher for handlers
     // If a layer is modal, then they should not exist
