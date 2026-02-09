@@ -1,7 +1,7 @@
 #ifndef DEPS_EVENTS_H
 #define DEPS_EVENTS_H
 
-#include <SDL3/SDL_events.h>
+#include "SDL3/SDL_events.h"
 
 using LibEvent = SDL_Event;
 #define EVENT_MOUSE_BUTTON_DOWN SDL_EVENT_MOUSE_BUTTON_DOWN

@@ -1,7 +1,7 @@
 #ifndef DEPS_INIT_H
 #define DEPS_INIT_H
 
-#include <SDL3_ttf/SDL_ttf.h>
+#include "SDL3_ttf/SDL_ttf.h"
 
 class GUI;
 class LibInitDeinit {

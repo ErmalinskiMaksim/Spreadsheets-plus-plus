@@ -4,7 +4,6 @@
 #include "Widget.h"
 #include <vector>
 
-class TextRenderer;
 class Pos;
 
 class TableWidget : public Widget {

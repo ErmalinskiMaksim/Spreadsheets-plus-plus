@@ -1,7 +1,7 @@
 #ifndef DEPS_RENDERING_H
 #define DEPS_RENDERING_H
 
-#include <SDL3_ttf/SDL_ttf.h>
+#include "SDL3_ttf/SDL_ttf.h"
 #include <memory>
 
 using Rect      = SDL_FRect;
