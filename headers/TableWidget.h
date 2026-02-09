@@ -2,7 +2,6 @@
 #define TABLE_WIDGET_H
 
 #include "Widget.h"
-#include <SDL3/SDL_rect.h>
 #include <vector>
 
 class TextRenderer;
@@ -12,17 +11,17 @@ class TableWidget : public Widget {
     struct HalfTable;
     struct SpreadsheetLabel;
     using Labels = std::vector<SpreadsheetLabel>;
-    using Points = std::vector<SDL_FPoint>;
+    using Points = std::vector<Point>;
 public:
     TableWidget(Widget&&, size_t cols = 12, size_t rows = 20);
     
     // convert graphical coordinates to <col, row>
-    Pos getSpreadsheetPos(SDL_FPoint) const;
+    Pos getSpreadsheetPos(Point) const;
     // convert <col, row> to cell rect 
-    SDL_FRect getSpreadsheetCoordinates(const Pos&) const;
+    Rect getSpreadsheetCoordinates(const Pos&) const;
 
     // get cell bounding rect which contains a point 
-    SDL_FRect selectCell(SDL_FPoint) const;
+    Rect selectCell(Point) const;
     // add <dx, dy> to offset 
     void addOffset(float, float) noexcept;
 
@@ -45,11 +44,11 @@ public:
     void resizeColumnLabel(float, float);
     void resizeRowLabel(float, float);
 
-    void render(SDL_Renderer* const, const TextRenderer&) const;
+    void render(const Renderer&, const Font&) const;
 
-    bool columnSpaceContains(SDL_FPoint) const noexcept;
-    bool rowSpaceContains(SDL_FPoint) const noexcept;
-    bool spreadsheetSpaceContains(SDL_FPoint) const noexcept;
+    bool columnSpaceContains(Point) const noexcept;
+    bool rowSpaceContains(Point) const noexcept;
+    bool spreadsheetSpaceContains(Point) const noexcept;
 private:
     // update column/row grid lines 
     void updateColumnGridLines();
@@ -69,18 +68,18 @@ private:
         // retuns a pair of an index of a cell which contains this coordinate and the coordinate itself 
         std::pair<size_t, float> findPosWithScrollingOffset(float) const;
         // find the offset from the start of label space of a label and dimension at a given index 
-        SDL_FPoint findStartOfLabel(size_t) const;
+        Point findStartOfLabel(size_t) const;
         // finds the first visible label 
         // returns its coordinate and dimension
-        SDL_FPoint findSelectedLabel(float) const;
-        void render(SDL_Renderer* const, const TextRenderer&, Color, SDL_FRect&, float&, float&) const;
+        Point findSelectedLabel(float) const;
+        void render(const Renderer&, const Font&, Color, Rect&, float&, float&) const;
 
         // column or row labels
         Labels labels;
         // vertical or horizontal gridlines
         Points gridLinePoints;
         // bounding rect of 
-        SDL_FRect labelSpaceHitBox;
+        Rect labelSpaceHitBox;
         // a default value of SpreadsheetLabel::dimension
         const float defaultDimension;
         // scrolling offset
@@ -94,7 +93,7 @@ private:
     HalfTable m_cols;
     HalfTable m_rows;
     // a part of the hibox excluding column/row spaces
-    SDL_FRect m_spreadsheetHitBox;
+    Rect m_spreadsheetHitBox;
 };
 
 #endif

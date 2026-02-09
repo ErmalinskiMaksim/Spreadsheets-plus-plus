@@ -1,4 +1,5 @@
 #include "GUI.h"
+#include "DepsInit.h"
 // layers
 #include "Layer.h"
 // handlers
@@ -16,60 +17,42 @@
 // Window data
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 600;
-constexpr SDL_InitFlags SDL_FLAGS = SDL_INIT_VIDEO;
-constexpr const char *WINDOW_TITLE = "Spreadsheets++";
 
 GUI::GUI() : m_layers(3)
             , m_focusStack(1)
-            , m_window{nullptr, SDL_DestroyWindow}
-            , m_renderer{nullptr, SDL_DestroyRenderer}
-            , m_mainFont{nullptr, TTF_CloseFont}
-            , m_textRenderer{}
+            , m_window{WINDOW_WIDTH, WINDOW_HEIGHT}
+            , m_renderer{}
+            , m_mainFont{}
 {
     // initialize libraries
-    if (!SDL_Init(SDL_FLAGS)) {
-        std::cerr << "Error initializing SDL3: " << SDL_GetError() << std::endl;
+    if (!LibInitDeinit::init()) {
+        std::cerr << "Error initializing the libraries: " << GetError() << std::endl;
+    }
+
+    if (!m_window.init()) {
+        std::cerr << "Error creating Window: " <<  GetError() << std::endl;
         throw;
     }
     
-    if (!TTF_Init()) {
-        std::cerr << "Error initializing SDL3_ttf: " << SDL_GetError() << std::endl;
+    if (!m_renderer.init(m_window.get())) {
+        std::cerr << "Error creating Renderer: " << GetError() << std::endl;
         throw;
     }
-
-    // initialize library objects
-    m_window.reset(SDL_CreateWindow(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT, 0));
-    if (!m_window) {
-        std::cerr << "Error creating Window: " <<  SDL_GetError() << std::endl;
+    
+    if (!m_mainFont.init(m_renderer.get(), "fonts/Monoid-Regular.ttf", 16)) {
+        std::cerr << "error opening main font: " << GetError() << std::endl;
         throw;
     }
-
-    m_renderer.reset(SDL_CreateRenderer(m_window.get(), nullptr));
-    if (!m_renderer) {
-        std::cerr << "Error creating Renderer: " << SDL_GetError() << std::endl;
-        throw;
-    }
-
-    m_mainFont.reset(TTF_OpenFont("fonts/Monoid-Regular.ttf", 16));
-    if (!m_mainFont) {
-        std::cerr << "error opening main font: " << SDL_GetError() << std::endl;
-        throw;
-    }
-
-    m_textRenderer.init(m_renderer.get(), m_mainFont.get());
-
-    // allow the typing
-    SDL_StartTextInput(m_window.get());
 
     // initialize the layers in the ascending order
-    auto charWidth = m_textRenderer.getCharacterWidth();
-    auto charHeight = m_textRenderer.getCharacterHeight();
+    auto charWidth = m_mainFont.getCharacterWidth();
+    auto charHeight = m_mainFont.getCharacterHeight();
     m_layers[0] = std::make_unique
         <Layer<TableWidget, TableInteractor, NonModalLayerCreateRequest
         , TableOperationsActionHandler, TableCellActionHandler>>( 
             NonModalLayerCreateRequest{
                 Widget {
-                    SDL_FRect{0.0f, 0.2f * WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT * 0.8f}
+                    Rect{0.0f, 0.2f * WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT * 0.8f}
                     , Color{0xEE, 0xEE, 0xEE, 0xFF}
                     , Color{0xEE, 0xEE, 0xEE, 0xFF}
                     , charWidth
@@ -81,7 +64,7 @@ GUI::GUI() : m_layers(3)
         <Layer<Widget, ToolBarInteractor, NonModalLayerCreateRequest>>(
             NonModalLayerCreateRequest{
                 Widget {
-                    SDL_FRect{0.0f, 0.05f * WINDOW_HEIGHT, WINDOW_WIDTH, 0.15f * WINDOW_HEIGHT}
+                    Rect{0.0f, 0.05f * WINDOW_HEIGHT, WINDOW_WIDTH, 0.15f * WINDOW_HEIGHT}
                     , Color{0xBB, 0xBB, 0xBB, 0xFF}
                     , Color{0xBB, 0xBB, 0xBB, 0xFF}
                     , charWidth
@@ -92,7 +75,7 @@ GUI::GUI() : m_layers(3)
         , FileActionHandler, HelpActionHandler>>(
             NonModalLayerCreateRequest{
                 Widget {
-                    SDL_FRect{0.0f, 0.0f, WINDOW_WIDTH, 0.05f * WINDOW_HEIGHT}, 
+                    Rect{0.0f, 0.0f, WINDOW_WIDTH, 0.05f * WINDOW_HEIGHT}, 
                     Color{0xCC, 0xCC, 0xCC, 0xFF},
                     Color{0xCC, 0xCC, 0xCC, 0xFF},
                     charWidth, charHeight
@@ -104,16 +87,12 @@ GUI::GUI() : m_layers(3)
 }
 
 GUI::~GUI() {
-    SDL_StopTextInput(m_window.get());
-    // font must be destroyed before TTF_Quit
-    m_mainFont.reset();
-    // destroy library
-    TTF_Quit();
-    // sdl objects must be destroyed before SDL_Quit
-    m_renderer.reset();
-    m_window.reset();
-    // destroy library
-    SDL_Quit();
+    // destroy objects for clean lib deinit
+    m_mainFont.destroy();
+    m_renderer.destroy();
+    m_window.destroy();
+    // destroy libraries
+    LibInitDeinit::deinit();
 }
 
 void GUI::setFocus(ILayer* layer) noexcept {
@@ -133,12 +112,8 @@ ILayer* GUI::getFocusedLayer() const noexcept {
 }
 
 bool GUI::processEvents() {
-    // wait for SDL events
-    SDL_Event SDLEvent;
-    SDL_WaitEvent(&SDLEvent);
-
-    // convert SDL event to internal event
-    auto guiEvent = translateEvent(SDLEvent);
+    // convert lib event to internal event
+    auto guiEvent = translateEvent(waitEvent());
     if (!guiEvent) return true;
     
     return std::visit([&](auto&& ev) {
@@ -229,13 +204,11 @@ bool GUI::processRequests() {
 
 void GUI::draw() const {
     // draw main background
-    SDL_SetRenderDrawColor(m_renderer.get(), 0xFF, 0xFF, 0xFF, 0xFF);
-    SDL_RenderClear(m_renderer.get());
-    
+    m_renderer.clear(); 
     // let all the layers draw themselves in the down->top order
     for(auto&& layer : m_layers)
-        layer->draw(m_renderer.get(), m_textRenderer);
+        layer->draw(m_renderer, m_mainFont);
 
     // present in a centralized maner
-    SDL_RenderPresent(m_renderer.get());
+    m_renderer.present();
 }

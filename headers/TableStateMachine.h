@@ -52,7 +52,7 @@ public:
     OptState process(const MouseMotionEvent&);
     OptState process(const MouseScrollingEvent&);
     // supported rendering logic
-    void draw(SDL_Renderer* const) const {}
+    void draw(const Renderer&, const Font&) const {}
 };
 
 class ColumnResizingTableState : public BaseTableState {
@@ -63,7 +63,7 @@ public:
     using BaseTableState::process;
     OptState process(const MouseLeftUpEvent&);
     // supported rendering logic
-    void draw(SDL_Renderer* const) const;
+    void draw(const Renderer&, const Font&) const;
 };
 
 class RowResizingTableState : public BaseTableState {
@@ -74,7 +74,7 @@ public:
     using BaseTableState::process;
     OptState process(const MouseLeftUpEvent&);
     // supported rendering logic
-    void draw(SDL_Renderer* const) const;
+    void draw(const Renderer&, const Font&) const;
 };
 
 // nothing by default
@@ -97,8 +97,8 @@ public:
         if (optResult) m_state = std::move(*optResult);
     }
     // dispatches states
-    void draw(SDL_Renderer* const renderer) const {
-        std::visit([&](auto&& state) { return state.draw(renderer); }, m_state);
+    void draw(const Renderer& renderer, const Font& font) const {
+        std::visit([&](auto&& state) { return state.draw(renderer, font); }, m_state);
     }
 private:
     std::variant<States...> m_state;

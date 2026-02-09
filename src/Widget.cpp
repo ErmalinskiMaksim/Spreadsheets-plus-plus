@@ -1,19 +1,18 @@
 #include "Widget.h"
-#include <SDL3/SDL_render.h>
 
-Color Color::operator+(Uint8 delta) const {
+Color Color::operator+(Color1 delta) const {
     return Color(r + delta, delta + g, delta + b, a);
 }
 
-Color Color::operator-(Uint8 delta) const {
+Color Color::operator-(Color1 delta) const {
     return Color(r - delta, g - delta, b - delta, a);
 }
 
-Color::operator SDL_Color() const noexcept {
-    return SDL_Color(r, g, b, a);
+Color::operator Color4() const noexcept {
+    return Color4(r, g, b, a);
 }
 
-Widget::Widget(SDL_FRect&& hitBox, Color fillColor, Color outlineColor, float charWidth, float charHeight) 
+Widget::Widget(Rect&& hitBox, Color fillColor, Color outlineColor, float charWidth, float charHeight) 
     : m_hitBox(hitBox)
       , m_fillColor(fillColor)
       , m_outlineColor(outlineColor)
@@ -26,17 +25,12 @@ Widget::Widget(SDL_FRect&& hitBox, Color fillColor, Color outlineColor, float ch
 //         && (y > m_hitBox.y && y <= m_hitBox.y + m_hitBox.h);
 // }
 
-void Widget::render(SDL_Renderer* renderer, const TextRenderer&) const noexcept {
-    // draw background
-    SDL_SetRenderDrawColor(renderer, m_fillColor.r, m_fillColor.g, m_fillColor.b, m_fillColor.a);
-    SDL_RenderFillRect(renderer, &m_hitBox);
-
-    // draw outline
-    SDL_SetRenderDrawColor(renderer, m_outlineColor.r, m_outlineColor.g, m_outlineColor.b, m_outlineColor.a);
-    SDL_RenderRect(renderer, &m_hitBox);
+void Widget::render(const Renderer& renderer, const Font&) const noexcept {
+    renderer.renderFillRect(&m_hitBox, m_fillColor);
+    renderer.renderRect(&m_hitBox, m_outlineColor);
 }
 
-SDL_FRect Widget::getHitBox() const noexcept {
+Rect Widget::getHitBox() const noexcept {
     return m_hitBox;
 }
 

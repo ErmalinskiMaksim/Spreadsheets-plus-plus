@@ -21,13 +21,13 @@ public:
         std::visit([&](auto&& ev) { processEvents(ev); }, event);
     }
 
-    void render(SDL_Renderer* renderer, const TextRenderer& textRenderer) const {
+    void render(const Renderer& renderer, const Font& font) const {
         auto hbox = r_widget.get().getHitBox();
 
         //  if there is no title draw input text at the top, else below the title
-        auto dy = (m_title) ? textRenderer.getCharacterHeight() : 0;
-        if (m_title) textRenderer.render(renderer, hbox, m_title->data(), m_title->length());
-        textRenderer.render(renderer, {hbox.x, hbox.y+dy, hbox.w, hbox.h}, m_input->c_str(),  m_input->length());
+        auto dy = (m_title) ? font.getCharacterHeight() : 0;
+        if (m_title) renderer.renderText(font, hbox, *m_title);
+        renderer.renderText(font, {hbox.x, hbox.y+dy, hbox.w, hbox.h}, *m_input);
     }
 private:
     using Interactor::processEvents;
@@ -35,11 +35,11 @@ private:
         // TODO add shift+enter = new line
         // enter = finish the dialog 
         // backspace = delete last character
-        if(event.key == SDLK_RETURN) {
+        if(event.key == KEY_ENTER) {
             r_pendingRequest.get() = !m_input->empty() 
                 ? DialogCloseRequest{ DialogResponse{ std::move(*m_input) }}
                 : DialogCloseRequest{ std::nullopt };
-        } else if (event.key == SDLK_BACKSPACE) {
+        } else if (event.key == KEY_BACKSPACE) {
             if (!m_input->empty()) m_input->pop_back();
         }    
     }

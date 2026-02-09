@@ -1,21 +1,20 @@
 #include "TableWidget.h"
-#include <SDL3/SDL_render.h>
 #include <charconv>
-#include "TextRenderer.h"
+#include <string_view>
 #include "Pos.h"
 
 TableWidget::TableWidget(Widget&& widget, size_t cols, size_t rows) 
     : Widget(widget)
     , m_cols{ Labels(cols, {m_hitBox.w/static_cast<float>(cols), {'\0', '\0', '\0', '\0'}})
             , Points(cols*2+3)
-            , SDL_FRect{m_hitBox.x + m_hitBox.w*0.05f, m_hitBox.y, m_hitBox.w*0.95f, m_hitBox.h*0.05f}
+            , Rect{m_hitBox.x + m_hitBox.w*0.05f, m_hitBox.y, m_hitBox.w*0.95f, m_hitBox.h*0.05f}
             , m_hitBox.w/static_cast<float>(cols)
             , 0.0f 
             , m_hitBox.x + m_hitBox.w*0.05f
             , m_hitBox.w}
     , m_rows{ Labels(rows, {m_hitBox.h/static_cast<float>(rows), {'\0', '\0', '\0', '\0'}})
             , Points(rows*2+3)
-            , SDL_FRect{m_hitBox.x, m_hitBox.y + m_hitBox.h*0.05f, m_hitBox.w*0.05f, m_hitBox.h*0.95f}
+            , Rect{m_hitBox.x, m_hitBox.y + m_hitBox.h*0.05f, m_hitBox.w*0.05f, m_hitBox.h*0.95f}
             , m_hitBox.h/static_cast<float>(rows)
             , 0.0f
             , m_hitBox.y + m_hitBox.h*0.05f
@@ -52,22 +51,22 @@ TableWidget::TableWidget(Widget&& widget, size_t cols, size_t rows)
         updateRowGridLines();
 }
 
-Pos TableWidget::getSpreadsheetPos(SDL_FPoint pos) const {
+Pos TableWidget::getSpreadsheetPos(Point pos) const {
     auto col = m_cols.getLabelFromPos(pos.x).first;
     auto row = m_rows.getLabelFromPos(pos.y).first;
     return {col, row};
 }
 
-SDL_FRect TableWidget::getSpreadsheetCoordinates(const Pos& pos) const {
+Rect TableWidget::getSpreadsheetCoordinates(const Pos& pos) const {
     auto [x, w] = m_cols.findStartOfLabel(pos.col);
     auto [y, h] = m_rows.findStartOfLabel(pos.row);
-    return SDL_FRect(x, y, w, h);
+    return Rect(x, y, w, h);
 }
 
-SDL_FRect TableWidget::selectCell(SDL_FPoint pos) const {
+Rect TableWidget::selectCell(Point pos) const {
     auto [x, w] = m_cols.findSelectedLabel(pos.x);
     auto [y, h] = m_rows.findSelectedLabel(pos.y);
-    return SDL_FRect{x, y, w, h};
+    return Rect{x, y, w, h};
 }
 
 void TableWidget::addOffset(float dx, float dy) noexcept {
@@ -221,22 +220,22 @@ void TableWidget::resizeRowLabel(float cellPos, float delta) {
     updateRowGridLines();   
 }
 
-void TableWidget::render(SDL_Renderer* const renderer, const TextRenderer& txtRenderer) const {
+void TableWidget::render(const Renderer& renderer, const Font& font) const {
     auto dest = m_cols.labelSpaceHitBox;
-    m_cols.render(renderer, txtRenderer, m_fillColor, dest, dest.x, dest.w);
+    m_cols.render(renderer, font, m_fillColor, dest, dest.x, dest.w);
     dest = m_rows.labelSpaceHitBox;
-    m_rows.render(renderer, txtRenderer, m_fillColor, dest, dest.y, dest.h);
+    m_rows.render(renderer, font, m_fillColor, dest, dest.y, dest.h);
 }
 
-bool TableWidget::columnSpaceContains(SDL_FPoint pos) const noexcept {
+bool TableWidget::columnSpaceContains(Point pos) const noexcept {
     return Widget::contains(pos.x, pos.y, m_cols.labelSpaceHitBox);
 }
 
-bool TableWidget::rowSpaceContains(SDL_FPoint pos) const noexcept {
+bool TableWidget::rowSpaceContains(Point pos) const noexcept {
     return Widget::contains(pos.x, pos.y, m_rows.labelSpaceHitBox);
 }
 
-bool TableWidget::spreadsheetSpaceContains(SDL_FPoint pos) const noexcept {
+bool TableWidget::spreadsheetSpaceContains(Point pos) const noexcept {
     return Widget::contains(pos.x, pos.y, m_spreadsheetHitBox);
 }
 
@@ -317,7 +316,7 @@ std::pair<size_t, float> TableWidget::HalfTable::findPosWithScrollingOffset(floa
     return { i, cellStart };
 }
 
-SDL_FPoint TableWidget::HalfTable::findStartOfLabel(size_t idx) const {
+Point TableWidget::HalfTable::findStartOfLabel(size_t idx) const {
     float pos = 0.0f;
     float dim = defaultDimension;
 
@@ -334,8 +333,8 @@ SDL_FPoint TableWidget::HalfTable::findStartOfLabel(size_t idx) const {
     return { pos - offset + logicalStart, dim} ;
 }
 
-SDL_FPoint TableWidget::HalfTable::findSelectedLabel(float pos) const {
-    SDL_FPoint selectedCell; // start and dimension
+Point TableWidget::HalfTable::findSelectedLabel(float pos) const {
+    Point selectedCell; // start and dimension
     // trim the coordinate to ignore everything before spreadsheet space
     auto [i, start] = getLabelFromPos(std::max(pos, logicalStart)); 
     selectedCell.y = (i < labels.size()) 
@@ -347,16 +346,12 @@ SDL_FPoint TableWidget::HalfTable::findSelectedLabel(float pos) const {
     return selectedCell;
 }
 
-void TableWidget::HalfTable::render(SDL_Renderer* const renderer, const TextRenderer& txtRenderer, 
-        Color c, SDL_FRect& dest, float& begin, float& len) const {
-    // filled label space
-    SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-    SDL_RenderFillRect(renderer, &labelSpaceHitBox);
+void TableWidget::HalfTable::render(const Renderer& renderer, const Font& font, 
+        Color c, Rect& dest, float& begin, float& len) const {
+    renderer.renderFillRect(&labelSpaceHitBox, c);
 
     // grid lines
-    auto gc = c - 0x22;
-    SDL_SetRenderDrawColor(renderer, gc.r, gc.g, gc.b, gc.a);
-    SDL_RenderLines(renderer, gridLinePoints.data(), static_cast<int>(gridLinePoints.size()));
+    renderer.renderLines(gridLinePoints.data(), static_cast<int>(gridLinePoints.size()), c - 0x22);
 
     // labels
     auto [i, pos] = findPosWithScrollingOffset(logicalStart);
@@ -364,7 +359,7 @@ void TableWidget::HalfTable::render(SDL_Renderer* const renderer, const TextRend
     pos -= logicalEnd;
     for(; i < sz && begin > pos; ++i) {
         len = labels[i].dimension;
-        txtRenderer.render(renderer, dest, labels[i].label, strnlen(labels[i].label, 3));
+        renderer.renderText(font, dest, std::string_view(labels[i].label, strnlen(labels[i].label, 3)));
         begin += len;
     }
 }

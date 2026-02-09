@@ -13,7 +13,7 @@ class TaskBarInteractor : public Interactor {
     template <std::size_t I>
     using Handler = std::tuple_element_t<I, std::tuple<Handlers...>>;
     using TaskNames = std::array<std::string_view, sizeof...(Handlers)>; 
-    using Buttons = std::array<SDL_FRect, sizeof...(Handlers)>;
+    using Buttons = std::array<Rect, sizeof...(Handlers)>;
 public:
     static constexpr bool hasOperations = false;
 
@@ -35,10 +35,10 @@ public:
         std::visit([&](auto&& ev) { processEvents(ev); }, event);
     }
     
-    void render(SDL_Renderer* const renderer, const TextRenderer& textRenderer) const {
+    void render(const Renderer& renderer, const Font& font) const {
         // render button text
         for (auto i = 0uz; i < m_tasks.size(); ++i) 
-            textRenderer.render(renderer, m_buttons[i], m_tasks[i].data(), m_tasks[i].length());
+            renderer.renderText(font, m_buttons[i], m_tasks[i]);
     }
 private:
     using Interactor::processEvents;

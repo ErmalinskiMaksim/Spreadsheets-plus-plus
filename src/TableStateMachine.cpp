@@ -1,16 +1,12 @@
 #include "TableStateMachine.h"
-#include "DataStorage.h"
-#include "TableWidget.h"
 #include "TableInteractor.h"
-#include "TableHandlers.h"
-#include "SDL3/SDL_render.h"
 
 OptState IdleTableState::process(const MouseLeftDownEvent& event) {
     auto& c = m_context.get();
     const auto& w = c.r_widget.get();
 
     c.m_mousePos = { event.x, event.y };
-    if (SDL_GetModState() & SDL_KMOD_CTRL) {
+    if (GetModState() & KEYMOD_CTRL) {
         if (w.columnSpaceContains(c.m_mousePos))
             return ColumnResizingTableState{c}; // enter resizing state
         else if (w.rowSpaceContains(c.m_mousePos))
@@ -75,13 +71,12 @@ OptState ColumnResizingTableState::process(const MouseLeftUpEvent& event) {
 }
 
 // draws a special helper line during resizing
-void ColumnResizingTableState::draw(SDL_Renderer* const renderer) const {
+void ColumnResizingTableState::draw(const Renderer& renderer, const Font&) const {
     auto hbox = m_context.get().r_widget.get().getHitBox();
-    SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, 0xff);
     float x;
-    SDL_GetMouseState(&x, nullptr);
-    SDL_FPoint helperLine[2] = {{x, hbox.y}, {x, hbox.y + hbox.h}};
-    SDL_RenderLines(renderer, helperLine, 2);
+    GetMouseState(&x, nullptr);
+    Point helperLine[2] = {{x, hbox.y}, {x, hbox.y + hbox.h}};
+    renderer.renderLines(helperLine, 2, {0xFF, 0x00, 0x00, 0xFF});
 }
 
 // commits resizing
@@ -95,11 +90,10 @@ OptState RowResizingTableState::process(const MouseLeftUpEvent& event) {
 }
 
 // draws a special helper line during resizing
-void RowResizingTableState::draw(SDL_Renderer* const renderer) const {
+void RowResizingTableState::draw(const Renderer& renderer, const Font&) const {
     auto hbox = m_context.get().r_widget.get().getHitBox();
-    SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, 0xff);
     float y;
-    SDL_GetMouseState(nullptr, &y); 
-    SDL_FPoint helperLine[2] = {{hbox.x, y}, {hbox.x + hbox.w, y}};
-    SDL_RenderLines(renderer, helperLine, 2);
+    GetMouseState(nullptr, &y); 
+    Point helperLine[2] = {{hbox.x, y}, {hbox.x + hbox.w, y}};
+    renderer.renderLines(helperLine, 2, {0xFF, 0x00, 0x00, 0xFF});
 }

@@ -1,14 +1,13 @@
 #ifndef GUI_H
 #define GUI_H
-#include <SDL3/SDL.h>
-#include <SDL3_ttf/SDL_ttf.h>
-#include "TextRenderer.h"
+#include "Renderer.h"
 #include <vector>
+#include "Window.h"
 
 class ILayer;
 
 // The main GUI manager class 
-// * initializes and destroys SDL and SDL_TTF
+// * initializes and destroys libraries 
 // * owns windows, renderers, fonts and graphical layers
 // * dispatches events to layers in a centralized maner 
 // * allows for communication between layers via requests&responses
@@ -47,13 +46,11 @@ private:
     // non owning focus stack of layers
     std::vector<ILayer*> m_focusStack; 
     // main window
-    std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> m_window;
+    Window m_window;
     // main renderer
-    std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> m_renderer;
+    Renderer m_renderer;
     // main font
-    std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> m_mainFont;
-    // main text renderer
-    TextRenderer m_textRenderer;
+    Font m_mainFont;
 };
 
 #endif // !GUI_H

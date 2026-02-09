@@ -20,14 +20,14 @@ public:
         std::visit([&](auto&& ev) { processEvents(ev); }, event);
     }
     
-    void render(SDL_Renderer* renderer, const TextRenderer& textRenderer) const {
+    void render(const Renderer& renderer, const Font& font) const {
         auto hbox = r_widget.get().getHitBox();
         
         // draw text content of the pop up
-        auto dy = textRenderer.getCharacterHeight();
+        auto dy = font.getCharacterHeight();
         for (auto i = 0uz; i < m_text.size(); ++i) 
-            textRenderer.render(renderer, { hbox.x, hbox.y + static_cast<float>(i)*dy, hbox.w, dy}
-                    , m_text[i].data(), m_text[i].length());
+            renderer.renderText(font, { hbox.x, hbox.y + static_cast<float>(i)*dy, hbox.w, dy}
+                    , m_text[i]);
     }
 private:
     using Interactor::processEvents;

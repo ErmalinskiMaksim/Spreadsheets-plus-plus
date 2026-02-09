@@ -20,14 +20,14 @@ public:
         std::visit([&](auto&& ev) { processEvents(ev); }, event);
     }
 
-    void render(SDL_Renderer* renderer, const TextRenderer& textRenderer) const {
+    void render(const Renderer& renderer, const Font& font) const {
         auto hbox = r_widget.get().getHitBox();
 
         // draw all the menu entries
-        auto dy = textRenderer.getCharacterHeight();
+        auto dy = font.getCharacterHeight();
         for (auto i = 0uz; i < m_entries.size(); ++i) 
-            textRenderer.render(renderer, { hbox.x, hbox.y + static_cast<float>(i)*dy, hbox.w, dy}
-                    , m_entries[i].text.data(), m_entries[i].text.length());
+            renderer.renderText(font, { hbox.x, hbox.y + static_cast<float>(i)*dy, hbox.w, dy}
+                    , m_entries[i].text);
     }
 private:
     using Interactor::processEvents;

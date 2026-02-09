@@ -38,7 +38,7 @@ bool FileActionHandler::dispatch(MenuResponse&& resp, HandlerContext ctx) {
         case Actions::SAVE:
             ctx.req.get() =  
                 DialogCreateRequest{ 
-                    Widget{ SDL_FRect{hbox.x, hbox.y + hbox.h, hbox.w, charHeight * 2}
+                    Widget{ Rect{hbox.x, hbox.y + hbox.h, hbox.w, charHeight * 2}
                         , color - 0x11 
                         , Color{}
                         , charWidth
@@ -89,7 +89,7 @@ bool HelpActionHandler::dispatch(MenuResponse&& resp, HandlerContext ctx) {
         case Actions::VIEW_GUIDE:
             ctx.req.get() = PopupCreateRequest{
                 Widget {
-                    SDL_FRect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth()*34, ctx.widget.getCharHeight()*5}
+                    Rect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth()*34, ctx.widget.getCharHeight()*5}
                     , ctx.widget.getFillColor() - 0x11
                 }
                 , PopupCreateRequest::Payload{{std::begin(payload), std::end(payload)}}};

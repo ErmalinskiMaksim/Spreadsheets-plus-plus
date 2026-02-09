@@ -28,7 +28,7 @@ public:
         auto hbox = ctx.widget.getHitBox();
         ctx.req.get() = MenuCreateRequest{
             Widget {
-                 SDL_FRect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 5, ctx.widget.getCharHeight() * 3}
+                 Rect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 5, ctx.widget.getCharHeight() * 3}
                 , ctx.widget.getFillColor() 
             }
             , MenuCreateRequest::Payload{{std::begin(payload), std::end(payload)}}}; 
@@ -67,7 +67,7 @@ public:
         auto hbox = ctx.widget.getHitBox();
         ctx.req.get() = MenuCreateRequest{
                 Widget {
-                    SDL_FRect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 10, ctx.widget.getCharHeight() }
+                    Rect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 10, ctx.widget.getCharHeight() }
                   , ctx.widget.getFillColor()
                 }
                 , MenuCreateRequest::Payload{{std::begin(payload), std::end(payload)}}}; 

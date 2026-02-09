@@ -1,7 +1,6 @@
 #ifndef TABLE_INTERACTOR_H
 #define TABLE_INTERACTOR_H
 
-#include "Handlers.h"
 #include "Interactor.h"
 #include "TableStateMachine.h"
 #include "DataStorage.h"
@@ -49,13 +48,10 @@ public:
         }, m_operation);
     }
 
-    void render(SDL_Renderer* renderer, const TextRenderer& txtRenderer) const {
-        // hovered-over rectangle
-        SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
-        SDL_RenderRect(renderer, &m_hoveredCell);
+    void render(const Renderer& renderer, const Font& font) const {
+        renderer.renderRect(&m_hoveredCell, {0x00, 0x00, 0xFF, 0xFF});
 
-        // state-dependent items like helper lines
-        m_fsm.draw(renderer);
+        m_fsm.draw(renderer, font);
 
         // draw spreadsheet text content
         const auto& storage = DataStorage::get().getRawStorage();
@@ -63,7 +59,7 @@ public:
             for(auto pos = 0uz; pos < block.m_data.size(); ++pos) {
                 Pos tablePos = DataStorage::getCellAbsolutePos(blockPos, pos);
                 auto dest = r_widget.get().getSpreadsheetCoordinates(tablePos);
-                txtRenderer.render(renderer, dest, block.m_data[pos].text.c_str(), block.m_data[pos].text.length());
+                renderer.renderText(font, dest, block.m_data[pos].text);
             }
     }
 
@@ -103,9 +99,9 @@ private:
 
     OperationRegister m_operation;
     // selection rectangle of the hovered-on cell
-    SDL_FRect m_hoveredCell;
+    Rect m_hoveredCell;
     // cached mouse position
-    SDL_FPoint m_mousePos;
+    Point m_mousePos;
     // a reference to the table widget
     TableWidgetRef r_widget;
     // a reference to the layer's request slot

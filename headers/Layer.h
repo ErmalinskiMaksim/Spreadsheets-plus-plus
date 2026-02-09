@@ -23,9 +23,9 @@ public:
         m_interactor.dispatchEvents(event);
     }
 
-    void draw(SDL_Renderer* const renderer, const TextRenderer& textRenderer) const override {
-        m_widget.render(renderer, textRenderer);
-        m_interactor.render(renderer, textRenderer);
+    void draw(const Renderer& renderer, const Font& font) const override {
+        m_widget.render(renderer, font);
+        m_interactor.render(renderer, font);
     }
 
     // dispatch responses to a correct action handler

@@ -27,7 +27,7 @@ public:
         std::visit([&](auto&& ev) { processEvents(ev); }, event);
     }
 
-    void render(SDL_Renderer* const, const TextRenderer&) const {
+    void render(const Renderer&, const Font&) const {
         // render button icons 
     }
 private:
@@ -47,7 +47,7 @@ private:
     // text names of menu buttons
     std::array<Icon, sizeof...(Handlers)> m_tools;
     // menu buttons' hit boxes
-    std::array<SDL_FRect, sizeof...(Handlers)> m_buttons;
+    std::array<Rect, sizeof...(Handlers)> m_buttons;
 
     WidgetView r_widget;
     RequestView r_pendingRequest;

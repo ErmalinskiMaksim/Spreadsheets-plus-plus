@@ -28,7 +28,7 @@ public:
         auto hbox = ctx.widget.getHitBox();
         ctx.req.get() = MenuCreateRequest {
             Widget {
-                SDL_FRect{hbox.x, hbox.y, ctx.widget.getCharWidth() * 13, ctx.widget.getCharHeight() * 3}
+                Rect{hbox.x, hbox.y, ctx.widget.getCharWidth() * 13, ctx.widget.getCharHeight() * 3}
                 , ctx.widget.getFillColor() - 0x22
             }
             , MenuCreateRequest::Payload {{ std::begin(payload), std::end(payload)}}};
