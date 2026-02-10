@@ -6,7 +6,7 @@ OptState IdleTableState::process(const MouseLeftDownEvent& event) {
     const auto& w = c.r_widget.get();
 
     c.m_mousePos = { event.x, event.y };
-    if (GetModState() & KEYMOD_CTRL) {
+    if (isCTRL()) {
         if (w.columnSpaceContains(c.m_mousePos))
             return ColumnResizingTableState{c}; // enter resizing state
         else if (w.rowSpaceContains(c.m_mousePos))

@@ -9,7 +9,6 @@
 
 struct KeyUpEvent {
     KeyType key;
-    ModType mod;
 };
 struct MouseLeftUpEvent {
     float x; float y;
@@ -27,7 +26,7 @@ struct MouseScrollingEvent {
     float x; float y;
 };
 struct TextInputEvent {
-    const char* text;
+    TextType text;
 };
 struct QuitEvent {};
 
@@ -65,29 +64,28 @@ using OptGuiEvent = std::optional<GuiEvent>;
 
 // convert events to internal events
 inline OptGuiEvent translateEvent(const LibEvent& event) noexcept {
-    switch (event.type) {
+    switch (EVENT_TYPE(event)) {
         case EVENT_MOUSE_MOTION:
-            return MouseMotionEvent{event.motion.x, event.motion.y};
+            return MouseMotionEvent{MOUSE_MOTION_X(event), MOUSE_MOTION_Y(event)};
         case EVENT_MOUSE_WHEEL:
-            // return (event.wheel.direction == MOUSEWHEEL_FLIPPED)
-            return MouseScrollingEvent{event.wheel.x, event.wheel.y}; 
+            return MouseScrollingEvent{MOUSE_WHEEL_X(event), MOUSE_WHEEL_Y(event)}; 
         case EVENT_MOUSE_BUTTON_DOWN:
-            switch (event.button.button) {
-                case MOUSE_BUTTON_LEFT: return MouseLeftDownEvent{event.button.x, event.button.y};
+            switch (MOUSE_BUTTON_TYPE(event)) {
+                case MOUSE_BUTTON_LEFT: return MouseLeftDownEvent{MOUSE_BUTTON_X(event), MOUSE_BUTTON_Y(event)};
                 default: return std::nullopt;
             }
         case EVENT_MOUSE_BUTTON_UP:
-            switch (event.button.button) {
-                case MOUSE_BUTTON_LEFT: return MouseLeftUpEvent{event.button.x, event.button.y};
-                case MOUSE_BUTTON_RIGHT: return MouseRightUpEvent{event.button.x, event.button.y};
+            switch (MOUSE_BUTTON_TYPE(event)) {
+                case MOUSE_BUTTON_LEFT: return MouseLeftUpEvent{MOUSE_BUTTON_X(event), MOUSE_BUTTON_Y(event)};
+                case MOUSE_BUTTON_RIGHT: return MouseRightUpEvent{MOUSE_BUTTON_X(event), MOUSE_BUTTON_Y(event)};
                 default: return std::nullopt;
             }
         case EVENT_TEXT_INPUT:
-            return TextInputEvent{event.text.text};
+            return TextInputEvent{TEXT_INPUT_TEXT(event)};
         case EVENT_KEY_UP:
-            if (event.key.key == KEY_Q && event.key.mod & KEYMOD_CTRL)
+            if (KEY_KEY(event) == KEY_Q && IS_KEYMOD_CTRL(event))
                 return QuitEvent{};
-            return KeyUpEvent{event.key.key, event.key.mod};
+            return KeyUpEvent{KEY_KEY(event)};
         case EVENT_QUIT:
             return QuitEvent{};
         default: return std::nullopt;

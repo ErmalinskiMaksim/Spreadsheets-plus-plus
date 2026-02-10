@@ -4,13 +4,13 @@
 #include "DepsRendering.h"
 #include <string_view>
 
+#ifdef USE_SDL
 class Font {
 public:
-    Font();
-    // Font(Font&&) = delete;
-    // Font& operator=(Font&&) = delete;
+    Font(RendererPtrType, std::string_view, float);
+    Font(Font&&) = delete;
+    Font& operator=(Font&&) = delete;
 
-    bool init(RendererPtrType, std::string_view, float);
     void destroy();
 
     TexturePtrType getGlyphAtlas() const noexcept;  
@@ -22,5 +22,20 @@ private:
     FontType m_font;
     TextureType m_glyphAtlas;
 };
+#elif USE_SFML
 
+class Font {
+public:
+    Font(std::string_view, unsigned);
+
+    float getCharacterWidth() const;
+    float getCharacterHeight() const;
+    unsigned size() const;
+    FontViewType get() const; 
+
+private:
+    FontType m_font;
+    unsigned m_fontSize;
+};
+#endif
 #endif

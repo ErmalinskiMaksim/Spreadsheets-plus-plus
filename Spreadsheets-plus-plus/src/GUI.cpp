@@ -1,98 +1,38 @@
 #include "GUI.h"
-#include "DepsInit.h"
-// layers
-#include "Layer.h"
-// handlers
-#include "TaskBarHandlers.h"
+// init
+#include "Init.h"
 // interactors
-#include "TaskBarInteractor.h"
-#include "TableInteractor.h"
-#include "ToolBarInteractor.h"
 #include "MenuInteractor.h"
 #include "DialogInteractor.h"
 #include "PopupInteractor.h"
 
-#include <iostream>
-
-// Window data
-constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 600;
-
-GUI::GUI() : m_layers(3)
-            , m_focusStack(1)
-            , m_window{WINDOW_WIDTH, WINDOW_HEIGHT}
-            , m_renderer{}
-            , m_mainFont{}
+GUI::GUI() : m_layers(MAIN_LAYER_COUNT)
+            , m_focusStack{}
+#ifdef USE_SDL
+            , m_window{WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT}
+            , m_renderer{m_window.get()}
+            , m_mainFont{m_renderer.get(), MAIN_FONT_PATH, MAIN_FONT_SZ}
+#elif USE_SFML
+            , m_renderer{WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT}
+            , m_mainFont{MAIN_FONT_PATH, static_cast<unsigned>(MAIN_FONT_SZ)}
+#endif
 {
-    // initialize libraries
-    if (!LibInitDeinit::init()) {
-        std::cerr << "Error initializing the libraries: " << GetError() << std::endl;
-    }
-
-    if (!m_window.init()) {
-        std::cerr << "Error creating Window: " <<  GetError() << std::endl;
-        throw;
-    }
-    
-    if (!m_renderer.init(m_window.get())) {
-        std::cerr << "Error creating Renderer: " << GetError() << std::endl;
-        throw;
-    }
-    
-    if (!m_mainFont.init(m_renderer.get(), "fonts/Monoid-Regular.ttf", 16)) {
-        std::cerr << "error opening main font: " << GetError() << std::endl;
-        throw;
-    }
-
     // initialize the layers in the ascending order
-    auto charWidth = m_mainFont.getCharacterWidth();
-    auto charHeight = m_mainFont.getCharacterHeight();
-    m_layers[0] = std::make_unique
-        <Layer<TableWidget, TableInteractor, NonModalLayerCreateRequest
-        , TableOperationsActionHandler, TableCellActionHandler>>( 
-            NonModalLayerCreateRequest{
-                Widget {
-                    Rect{0.0f, 0.2f * WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT * 0.8f}
-                    , Color{0xEE, 0xEE, 0xEE, 0xFF}
-                    , Color{0xEE, 0xEE, 0xEE, 0xFF}
-                    , charWidth
-                    , charHeight
-                }, NonModalLayerCreateRequest::Payload{}}
-            , TableOperationsActionHandler{}
-            , TableCellActionHandler{}); // lowest layer
-    m_layers[1] = std::make_unique
-        <Layer<Widget, ToolBarInteractor, NonModalLayerCreateRequest>>(
-            NonModalLayerCreateRequest{
-                Widget {
-                    Rect{0.0f, 0.05f * WINDOW_HEIGHT, WINDOW_WIDTH, 0.15f * WINDOW_HEIGHT}
-                    , Color{0xBB, 0xBB, 0xBB, 0xFF}
-                    , Color{0xBB, 0xBB, 0xBB, 0xFF}
-                    , charWidth
-                    , charHeight
-                }, NonModalLayerCreateRequest::Payload{}}); 
-    m_layers[2] = std::make_unique
-        <Layer<Widget, TaskBarInteractor, NonModalLayerCreateRequest
-        , FileActionHandler, HelpActionHandler>>(
-            NonModalLayerCreateRequest{
-                Widget {
-                    Rect{0.0f, 0.0f, WINDOW_WIDTH, 0.05f * WINDOW_HEIGHT}, 
-                    Color{0xCC, 0xCC, 0xCC, 0xFF},
-                    Color{0xCC, 0xCC, 0xCC, 0xFF},
-                    charWidth, charHeight
-                }, NonModalLayerCreateRequest::Payload{}}
-            , FileActionHandler{}
-            , HelpActionHandler{});
+    initializeLayers(m_layers, m_mainFont.getCharacterWidth(), m_mainFont.getCharacterHeight());
     // by default the lowest layer has focus
-    m_focusStack[0] = m_layers[0].get();
+    if constexpr (MAIN_LAYER_COUNT)
+        m_focusStack.push_back(m_layers[0].get());
 }
 
 GUI::~GUI() {
+#ifdef USE_SDL
     // destroy objects for clean lib deinit
     m_mainFont.destroy();
     m_renderer.destroy();
     m_window.destroy();
+#endif
     // destroy libraries
-    LibInitDeinit::deinit();
+    deinit();
 }
 
 void GUI::setFocus(ILayer* layer) noexcept {
@@ -113,7 +53,13 @@ ILayer* GUI::getFocusedLayer() const noexcept {
 
 bool GUI::processEvents() {
     // convert lib event to internal event
+#ifdef USE_SDL
     auto guiEvent = translateEvent(waitEvent());
+#elif USE_SFML
+    LibEvent libEv;
+    m_renderer.get().waitEvent(libEv);
+    auto guiEvent = translateEvent(libEv); 
+#endif
     if (!guiEvent) return true;
     
     return std::visit([&](auto&& ev) {

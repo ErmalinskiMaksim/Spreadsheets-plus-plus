@@ -1,8 +1,9 @@
 #ifndef GUI_H
 #define GUI_H
 #include "Renderer.h"
-#include <vector>
 #include "Window.h"
+#include <vector>
+#include <memory>
 
 class ILayer;
 
@@ -26,6 +27,17 @@ public:
         return gui;
     }
 
+    static bool init() {
+        #ifdef USE_SDL 
+            constexpr SDL_InitFlags SDL_FLAGS = SDL_INIT_VIDEO;         
+            return SDL_Init(SDL_FLAGS) && TTF_Init();
+        #elif USE_SFML 
+            return true;  
+        #else
+            return false;
+        #endif
+    }
+
     // process application events and dispatch them to layers 
     bool processEvents();
     // let all the layers draw themselves
@@ -33,6 +45,13 @@ public:
 private:
     GUI();
     
+    static void deinit() {
+        #ifdef USE_SDL
+            TTF_Quit();
+            SDL_Quit();
+        #endif
+    }
+
     // process layer requests
     bool processRequests();
     
@@ -45,8 +64,11 @@ private:
     std::vector<std::unique_ptr<ILayer>> m_layers; 
     // non owning focus stack of layers
     std::vector<ILayer*> m_focusStack; 
+    #ifdef USE_SDL
     // main window
     Window m_window;
+    #endif // USE_SDL
+
     // main renderer
     Renderer m_renderer;
     // main font

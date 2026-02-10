@@ -1,5 +1,6 @@
 #include "Widget.h"
 
+
 Color Color::operator+(Color1 delta) const {
     return Color(r + delta, delta + g, delta + b, a);
 }

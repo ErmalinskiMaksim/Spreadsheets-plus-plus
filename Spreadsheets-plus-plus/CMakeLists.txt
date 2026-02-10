@@ -52,6 +52,7 @@ set(RELEASE_FLAGS
 #     -fsanitize=address
 #     -fsanitize-address-use-after-scope
 # )
+
 set(RELEASE_LIBS -flto)
 
 file(GLOB SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
@@ -59,8 +60,15 @@ add_executable (Spreadsheet ${SRC})
 target_compile_options(Spreadsheet PRIVATE ${BASE_FLAGS} ${STRICT_FLAGS})
 target_include_directories(Spreadsheet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/headers)
 add_compile_options(-fdebug-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=.)   
-   
-target_link_libraries(Spreadsheet PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf
+
+set(GUI_LIBS)
+if(GRAPHICS_LIBRARY STREQUAL "SDL")
+    set(GUI_LIBS SDL3::SDL3 SDL3_ttf::SDL3_ttf)
+elseif (GRAPHICS_LIBRARY STREQUAL "SFML")
+    set(GUI_LIBS sfml-graphics sfml-window sfml-system)
+endif()
+
+target_link_libraries(Spreadsheet PRIVATE ${GUI_LIBS}
     # $<$<CONFIG:Debug>:${DEBUG_LIBS}>
     $<$<CONFIG:Release>:${RELEASE_LIBS}>
 )   

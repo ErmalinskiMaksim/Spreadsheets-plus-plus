@@ -1,3 +1,4 @@
+#ifdef USE_SDL
 #ifndef WINDOW_H
 #define WINDOW_H
 
@@ -5,18 +6,18 @@
 
 class Window {
 public:
-    Window(int, int);
+    Window(std::string_view, int, int);
     Window(Window&&) = delete;
     Window& operator=(Window&&) = delete;
 
-    bool init();
     void destroy() const;
 
     WindowPtrType get() const noexcept;
 private:
     WindowType m_window;
+    std::string_view m_title;
     int m_width;
-    int  m_height;
+    int m_height;
 };
-
+#endif
 #endif

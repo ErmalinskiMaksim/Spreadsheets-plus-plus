@@ -1,6 +1,6 @@
 #include "TableWidget.h"
+#include <cstring>
 #include <charconv>
-#include <string_view>
 #include "Pos.h"
 
 TableWidget::TableWidget(Widget&& widget, size_t cols, size_t rows) 

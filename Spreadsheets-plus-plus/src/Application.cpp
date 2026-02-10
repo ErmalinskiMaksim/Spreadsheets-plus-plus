@@ -2,6 +2,7 @@
 #include "GUI.h"
 
 void Application::run() {
+    if (!GUI::init()) throw; 
     while(processEvents()) display();
 }
 

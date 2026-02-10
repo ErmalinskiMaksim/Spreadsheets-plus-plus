@@ -1,15 +1,19 @@
 #include "Font.h"
+#include <iostream>
 
-Font::Font()
-    : m_font{nullptr, TTF_CloseFont}
+#ifdef USE_SDL
+Font::Font(RendererPtrType renderer, std::string_view path, float fontSz)
+    : m_font{TTF_OpenFont(path.data(), fontSz), TTF_CloseFont}
     , m_glyphAtlas{nullptr, SDL_DestroyTexture}
-{}
-
-bool Font::init(RendererPtrType renderer, std::string_view path, float sz) {
-    m_font.reset(TTF_OpenFont(path.data(), sz));
-    if (!m_font) return false;
-
-    return prerenderGlyphAtlas(renderer);
+{
+    if (!m_font) {
+        std::cerr << "error opening font: " << SDL_GetError() << std::endl;
+        throw;
+    }
+    if (!prerenderGlyphAtlas(renderer)) {
+        std::cerr << "error rendering a glyph atlas: " << SDL_GetError() << std::endl;
+        throw;
+    }
 }
 
 void Font::destroy() {
@@ -44,3 +48,35 @@ float Font::getCharacterWidth() const noexcept {
 float Font::getCharacterHeight() const noexcept {
     return (m_glyphAtlas) ? static_cast<float>(m_glyphAtlas->h) : 0.0f; 
 }
+
+#elif USE_SFML
+Font::Font(std::string_view path, unsigned fontSz)
+    : m_fontSize(fontSz) 
+{
+    if (!m_font.loadFromFile(std::string(path))) {
+        std::cerr << "Error opening font: " << path << std::endl;
+        throw std::runtime_error("Failed to load font");
+    }
+}
+
+float Font::getCharacterWidth() const {
+    return m_font.getGlyph(' ', m_fontSize, false).advance;
+}
+
+float Font::getCharacterHeight() const {
+    return m_font.getLineSpacing(m_fontSize);
+}
+
+unsigned Font::size() const {
+    return m_fontSize;
+}
+
+FontViewType Font::get() const {
+    return m_font; 
+}
+
+#endif
+
+
+
+
