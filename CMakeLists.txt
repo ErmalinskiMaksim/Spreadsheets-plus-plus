@@ -1,25 +1,23 @@
-cmake_minimum_required (VERSION 3.16)
+cmake_minimum_required (VERSION 3.20)
 
-set(CMAKE_CXX_COMPILER "g++" CACHE STRING "C++ compiler" FORCE)
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)   
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(Spreadsheet LANGUAGES CXX)
-
-# optional library
-set(GRAPHICS_LIBRARY "SDL" CACHE STRING "The graphics library to use (SDL or SFML)")
-
-# Create a preprocessor definition based on the choice
-if(GRAPHICS_LIBRARY STREQUAL "SDL")
-    add_compile_definitions(USE_SDL)
-elseif(GRAPHICS_LIBRARY STREQUAL "SFML")
-    add_compile_definitions(USE_SFML)
+# LTO
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_ERROR)
+if (IPO_SUPPORTED)
+    set(GUI_ENABLE_LTO ON)
 else()
-    message(FATAL_ERROR "Invalid GRAPHICS_LIBRARY: ${GRAPHICS_LIBRARY}. Choose SDL or SFML.")
+    set(GUI_ENABLE_LTO OFF)
 endif()
 
+# GUI LIB OPTION
+set(GRAPHICS_LIBRARY "SDL" CACHE STRING "Graphics backend: SDL or SFML")
+set_property(CACHE GRAPHICS_LIBRARY PROPERTY STRINGS SDL SFML)
+
+
+project(Spreadsheet LANGUAGES CXX)
 include(cmake/dependencies.cmake)
 # Include sub-projects.
 add_subdirectory ("Spreadsheets-plus-plus")
+# add_subdirectory ("RTWgui")

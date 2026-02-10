@@ -4,10 +4,20 @@
 #include "TaskBarHandlers.h"
 
 // Custom Interactors
-#include "TaskBarInteractor.h"
+#include "Interactors/TaskBarInteractor.h"
 #include "TableInteractor.h"
-#include "ToolBarInteractor.h"
+#include "Interactors/ToolBarInteractor.h"
 
+// Window
+const std::string_view WINDOW_TITLE = "Spreadsheets++";
+const unsigned WINDOW_WIDTH  = 800;
+const unsigned WINDOW_HEIGHT = 600;
+
+// Font
+const std::string_view MAIN_FONT_PATH = "fonts/Monoid-Regular.ttf";
+const float MAIN_FONT_SZ = 16;
+
+const size_t MAIN_LAYER_COUNT = 3;
 void initializeLayers(LayerArray& layers, float mainFontCharWidth, float mainFontCharHeight) {
     layers[0] = std::make_unique
         <Layer<TableWidget, TableInteractor, NonModalLayerCreateRequest

@@ -2,7 +2,7 @@
 #define TABLE_STATE_MACHINE_H
 
 #include "TableHandlers.h"
-#include "TableWidget.h"
+#include "Widgets/TableWidget.h"
 #include "Events.h"
 
 template<WidgetType, ResponseHandler, ResponseHandler>

@@ -1,7 +1,7 @@
 #ifndef TABLE_INTERACTOR_H
 #define TABLE_INTERACTOR_H
 
-#include "Interactor.h"
+#include "Interactors/Interactor.h"
 #include "TableStateMachine.h"
 #include "DataStorage.h"
 
