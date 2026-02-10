@@ -3,8 +3,9 @@
 This is a basic spreadsheets application made in C++. You can edit the spreadsheet and perform basic operations on data.
 
 ## 2. Dependencies
-It is powered by SDL3 and SDL3_TTF
-
+It supports 2 groups of libraries:\
+1. SDL3, SDL3_TTF\
+2. SFML\
 ## 3. Platforms 
 At the moment, it only supports Linux but Windows support is coming soon.
 
@@ -16,12 +17,12 @@ At the moment, the user can:
 * open/save/close files
 Advice can be found in the Help menu inside the app
 
-## 5. Build
-The project requires two libreries, as was mentioned above. The installation guides:
-https://github.com/libsdl-org/SDL
-https://github.com/libsdl-org/SDL_ttf
-
-add them to the PATH and run:
-cd path/to/the/directory
-cmake -S . -B build
-cmake --build build
+## 5. Build&Run
+1. Fetch:\
+```git clone https://github.com/ErmalinskiMaksim/Spreadsheets-plus-plus.git```\
+2. Build:\
+```cd Spreadsheets-plus-plus```\
+```cmake -S . -B build```\
+```cmake --build build```\
+3. Run:\
+```build/Spreadsheets-plus-plus/Spreadsheet```
