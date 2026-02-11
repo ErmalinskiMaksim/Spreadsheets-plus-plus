@@ -1,14 +1,15 @@
 #ifndef TABLE_INTERACTOR_H
 #define TABLE_INTERACTOR_H
 
-#include "Interactors/Interactor.h"
+#include "RTWgui/Interactors/Interactor.h"
 #include "TableStateMachine.h"
 #include "DataStorage.h"
 
 // A layer of indirection between layer event processing and the table widget
 template<WidgetType MainWidget = TableWidget
-        , ResponseHandler TableOps = TableOperationsActionHandler
-        , ResponseHandler CellOps = TableCellActionHandler>
+        , typename ContextType = HandlerContext
+        , typename TableOps = TableOperationsActionHandler
+        , typename CellOps = TableCellActionHandler>
 class TableInteractor : public Interactor {
     friend class IdleTableState;
     friend class ColumnResizingTableState;

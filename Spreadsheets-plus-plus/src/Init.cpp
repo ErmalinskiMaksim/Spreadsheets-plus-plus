@@ -1,12 +1,12 @@
-#include "Init.h"
+#include "RTWgui/Init.h"
 
 // Custom handlers for layers
 #include "TaskBarHandlers.h"
 
 // Custom Interactors
-#include "Interactors/TaskBarInteractor.h"
+#include "RTWgui/Interactors/TaskBarInteractor.h"
 #include "TableInteractor.h"
-#include "Interactors/ToolBarInteractor.h"
+#include "RTWgui/Interactors/ToolBarInteractor.h"
 
 // Window
 const std::string_view WINDOW_TITLE = "Spreadsheets++";
@@ -20,8 +20,7 @@ const float MAIN_FONT_SZ = 16;
 const size_t MAIN_LAYER_COUNT = 3;
 void initializeLayers(LayerArray& layers, float mainFontCharWidth, float mainFontCharHeight) {
     layers[0] = std::make_unique
-        <Layer<TableWidget, TableInteractor, NonModalLayerCreateRequest
-        , TableOperationsActionHandler, TableCellActionHandler>>( 
+        <Layer<TableWidget, HandlerContext, NonModalLayerCreateRequest, TableInteractor>>(
             NonModalLayerCreateRequest{
                 Widget {
                     Rect{0.0f, 0.2f * WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT * 0.8f}
@@ -29,11 +28,9 @@ void initializeLayers(LayerArray& layers, float mainFontCharWidth, float mainFon
                     , Color{0xEE, 0xEE, 0xEE, 0xFF}
                     , mainFontCharWidth
                     , mainFontCharHeight
-                }, NonModalLayerCreateRequest::Payload{}}
-            , TableOperationsActionHandler{}
-            , TableCellActionHandler{}); // lowest layer
+                }, NonModalLayerCreateRequest::Payload{}});
     layers[1] = std::make_unique
-        <Layer<Widget, ToolBarInteractor, NonModalLayerCreateRequest>>(
+        <Layer<Widget, HandlerContext, NonModalLayerCreateRequest, ToolBarInteractor>>(
             NonModalLayerCreateRequest{
                 Widget {
                     Rect{0.0f, 0.05f * WINDOW_HEIGHT, WINDOW_WIDTH, 0.15f * WINDOW_HEIGHT}
@@ -43,8 +40,8 @@ void initializeLayers(LayerArray& layers, float mainFontCharWidth, float mainFon
                     , mainFontCharHeight
                 }, NonModalLayerCreateRequest::Payload{}}); 
     layers[2] = std::make_unique
-        <Layer<Widget, TaskBarInteractor, NonModalLayerCreateRequest
-        , FileActionHandler, HelpActionHandler>>(
+        <Layer<Widget, HandlerContext, NonModalLayerCreateRequest
+        , TaskBarInteractor, FileActionHandler<HandlerContext>, HelpActionHandler<HandlerContext>>>(
             NonModalLayerCreateRequest{
                 Widget {
                     Rect{0.0f, 0.0f, WINDOW_WIDTH, 0.05f * WINDOW_HEIGHT}
@@ -53,6 +50,6 @@ void initializeLayers(LayerArray& layers, float mainFontCharWidth, float mainFon
                     , mainFontCharWidth
                     , mainFontCharHeight
                 }, NonModalLayerCreateRequest::Payload{}}
-            , FileActionHandler{}
-            , HelpActionHandler{});
+            , FileActionHandler<HandlerContext>{}
+            , HelpActionHandler<HandlerContext>{});
 }

@@ -1,7 +1,8 @@
 #ifndef TABLE_HANDLERS_H
 #define TABLE_HANDLERS_H
 
-#include "Handlers.h"
+#include "RTWgui/Requests.h"
+#include "HandlerContext.h"
 
 // an action handler for spreadsheet menus
 class TableOperationsActionHandler {

@@ -6,6 +6,7 @@
 
 // The main file managing class
 class FileManager {
+    template<typename HandlerContext>
     friend class FileActionHandler;
     friend consteval auto buildFilePathDialogPayload();
     static inline constexpr uint8_t MAX_FILE_PATH_LEN = 64;
