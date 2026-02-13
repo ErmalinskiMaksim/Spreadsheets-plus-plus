@@ -5,8 +5,9 @@
 
 // Custom Interactors
 #include "RTWgui/Interactors/TaskBarInteractor.h"
-#include "TableInteractor.h"
 #include "RTWgui/Interactors/ToolBarInteractor.h"
+#include "TableInteractor.h"
+#include "HandlerContext.h"
 
 // Window
 const std::string_view WINDOW_TITLE = "Spreadsheets++";
@@ -20,7 +21,8 @@ const float MAIN_FONT_SZ = 16;
 const size_t MAIN_LAYER_COUNT = 3;
 void initializeLayers(LayerArray& layers, float mainFontCharWidth, float mainFontCharHeight) {
     layers[0] = std::make_unique
-        <Layer<TableWidget, HandlerContext, NonModalLayerCreateRequest, TableInteractor>>(
+        <Layer<TableWidget, HandlerContext, NonModalLayerCreateRequest, TableInteractor
+            , TableOperationsActionHandler<HandlerContext>, TableCellActionHandler<HandlerContext>>>(
             NonModalLayerCreateRequest{
                 Widget {
                     Rect{0.0f, 0.2f * WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT * 0.8f}
@@ -28,7 +30,9 @@ void initializeLayers(LayerArray& layers, float mainFontCharWidth, float mainFon
                     , Color{0xEE, 0xEE, 0xEE, 0xFF}
                     , mainFontCharWidth
                     , mainFontCharHeight
-                }, NonModalLayerCreateRequest::Payload{}});
+                }, NonModalLayerCreateRequest::Payload{}}
+            , TableOperationsActionHandler<HandlerContext>{}
+            , TableCellActionHandler<HandlerContext>{});
     layers[1] = std::make_unique
         <Layer<Widget, HandlerContext, NonModalLayerCreateRequest, ToolBarInteractor>>(
             NonModalLayerCreateRequest{

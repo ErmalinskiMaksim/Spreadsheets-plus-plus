@@ -4,11 +4,12 @@
 #include "RTWgui/Widgets/Widget.h"
 #include "RTWgui/Requests.h"
 #include "Operations.h"
+#include <functional>
      
 // bare minimum context that is necessary for 
 // an action handler
 struct HandlerContext {
-    Widget widget;
+    std::reference_wrapper<Widget> widget;
     RequestView req;
     OptOperationView op = std::nullopt;
 };

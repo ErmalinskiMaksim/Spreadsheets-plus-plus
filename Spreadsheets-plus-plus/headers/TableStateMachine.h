@@ -1,16 +1,17 @@
 #ifndef TABLE_STATE_MACHINE_H
 #define TABLE_STATE_MACHINE_H
 
-#include "TableHandlers.h"
 #include "RTWgui/Widgets/TableWidget.h"
 #include "RTWgui/Events.h"
+#include "TableHandlers.h"
+#include "HandlerContext.h"
 
 template<WidgetType, typename, typename, typename>
 class TableInteractor;
 using DefaultTableInteractor = TableInteractor<TableWidget
                              , HandlerContext
-                             , TableOperationsActionHandler
-                             , TableCellActionHandler>;
+                             , TableOperationsActionHandler<HandlerContext>
+                             , TableCellActionHandler<HandlerContext>>;
 
 class IdleTableState;
 class ColumnResizingTableState;

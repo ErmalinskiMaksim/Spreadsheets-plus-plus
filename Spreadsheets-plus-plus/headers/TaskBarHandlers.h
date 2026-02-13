@@ -2,9 +2,8 @@
 #define TASK_BAR_HANDLERS_H
 
 #include "RTWgui/Requests.h"
-// #include "HandlerContext.h"
 #include "FileManager.h"
-
+//
 // Handles actions of the "File" menu
 template<typename HandlerContext>
 class FileActionHandler {
@@ -34,12 +33,13 @@ public:
     // called when File menu is first invoked to display possible actions
     static bool requestMainMenu(HandlerContext ctx) {
         constexpr auto payload = buildPayload(); 
-
-        auto hbox = ctx.widget.getHitBox();
+        const auto& w = ctx.widget.get();
+        auto hbox = w.getHitBox();
         ctx.req.get() = MenuCreateRequest{
             Widget {
-                 Rect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 5, ctx.widget.getCharHeight() * 3}
-                , ctx.widget.getFillColor() 
+                 Rect{hbox.x, hbox.y + hbox.h, w.getCharWidth() * 5, w.getCharHeight() * 3}
+                , w.getFillColor() 
+                , Color{0x00, 0x00, 0x00, 0xFF}
             }
             , MenuCreateRequest::Payload{{std::begin(payload), std::end(payload)}}}; 
 
@@ -53,10 +53,11 @@ public:
     // CLOSE     ---> close the current file
     // none      ---> do nothing
     bool dispatch(MenuResponse&& resp, HandlerContext ctx) {
-        auto hbox = ctx.widget.getHitBox();
-        auto color = ctx.widget.getFillColor();
-        auto charWidth = ctx.widget.getCharWidth();
-        auto charHeight = ctx.widget.getCharHeight();
+        const auto& w = ctx.widget.get();
+        auto hbox = w.getHitBox();
+        auto color = w.getFillColor();
+        auto charWidth = w.getCharWidth();
+        auto charHeight = w.getCharHeight();
 
         m_currentAction = static_cast<Actions>(resp.code);
         switch (m_currentAction) {
@@ -67,7 +68,7 @@ public:
                     DialogCreateRequest{ 
                         Widget{ Rect{hbox.x, hbox.y + hbox.h, hbox.w, charHeight * 2}
                             , color - 0x11 
-                            , Color{}
+                            , Color{0x00, 0x00, 0x00, 0xFF}
                             , charWidth
                             , charHeight
                         }
@@ -140,11 +141,13 @@ public:
     static bool requestMainMenu(HandlerContext ctx) {
         constexpr auto payload = buildPayload();
 
-        auto hbox = ctx.widget.getHitBox();
+        const auto& w = ctx.widget.get();
+        auto hbox = w.getHitBox();
         ctx.req.get() = MenuCreateRequest{
                 Widget {
-                    Rect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth() * 10, ctx.widget.getCharHeight() }
-                  , ctx.widget.getFillColor()
+                    Rect{hbox.x, hbox.y + hbox.h, w.getCharWidth() * 10, w.getCharHeight() }
+                  , w.getFillColor()
+                  , Color{0x00, 0x00, 0x00, 0xFF}
                 }
                 , MenuCreateRequest::Payload{{std::begin(payload), std::end(payload)}}}; 
 
@@ -158,13 +161,15 @@ public:
     bool dispatch(MenuResponse&& resp, HandlerContext ctx) {
         constexpr auto payload = buildHelpPopUpPayload();
 
-        auto hbox = ctx.widget.getHitBox();
+        const auto& w = ctx.widget.get();
+        auto hbox = w.getHitBox();
         switch (static_cast<Actions>(resp.code)) {
             case Actions::VIEW_GUIDE:
                 ctx.req.get() = PopupCreateRequest{
                     Widget {
-                        Rect{hbox.x, hbox.y + hbox.h, ctx.widget.getCharWidth()*34, ctx.widget.getCharHeight()*5}
-                        , ctx.widget.getFillColor() - 0x11
+                        Rect{hbox.x, hbox.y + hbox.h, w.getCharWidth()*34, w.getCharHeight()*5}
+                        , w.getFillColor() - 0x11
+                        , Color{0x00, 0x00, 0x00, 0xFF}
                     }
                     , PopupCreateRequest::Payload{{std::begin(payload), std::end(payload)}}};
                 break;

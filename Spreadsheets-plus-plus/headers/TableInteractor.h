@@ -8,8 +8,8 @@
 // A layer of indirection between layer event processing and the table widget
 template<WidgetType MainWidget = TableWidget
         , typename ContextType = HandlerContext
-        , typename TableOps = TableOperationsActionHandler
-        , typename CellOps = TableCellActionHandler>
+        , typename TableOps = TableOperationsActionHandler<HandlerContext>
+        , typename CellOps = TableCellActionHandler<HandlerContext>>
 class TableInteractor : public Interactor {
     friend class IdleTableState;
     friend class ColumnResizingTableState;
@@ -21,8 +21,9 @@ public:
     static constexpr bool hasOperations = true;
 
     TableInteractor(NonModalLayerCreateRequest::Payload&&, TableWidgetRef table, RequestView req)
-    : m_operation{EmptyOperation{}} 
-    , m_hoveredCell{0.0f, 0.0f, 0.0f, 0.0f}
+    : m_hoveredCell{
+        Rect{}, Color{}, Color{0x00, 0x00, 0xFF, 0xFF}, table.get().getCharWidth(), table.get().getCharHeight()} 
+    , m_operation{EmptyOperation{}} 
     , m_mousePos{0.0f, 0.0f}
     , r_widget(table)
     , r_layersRequest(req)
@@ -43,6 +44,7 @@ public:
             if constexpr (std::is_same_v<T, InsertOperation>
                         || std::is_same_v<T, DeleteOperation>
                         || std::is_same_v<T, WriteOperation>) {
+
                 perform(op); 
                 m_operation = EmptyOperation{};
             } 
@@ -50,7 +52,8 @@ public:
     }
 
     void render(const Renderer& renderer, const Font& font) const {
-        renderer.renderRect(&m_hoveredCell, {0x00, 0x00, 0xFF, 0xFF});
+        auto hoveredRect = m_hoveredCell.getHitBox();
+        renderer.renderRect(&hoveredRect, {0x00, 0x00, 0xFF, 0xFF});
 
         m_fsm.draw(renderer, font);
 
@@ -98,9 +101,10 @@ private:
         DataStorage::get().setData(std::move(op.text), pos);
     }
 
-    OperationRegister m_operation;
     // selection rectangle of the hovered-on cell
-    Rect m_hoveredCell;
+    Widget m_hoveredCell;
+    // table operations
+    OperationRegister m_operation;
     // cached mouse position
     Point m_mousePos;
     // a reference to the table widget
