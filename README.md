@@ -1,13 +1,12 @@
 # Spreadsheets++ (Spreadsheets-plus-plus)
 ## 1.  Description
-This is a basic spreadsheets application made in C++. You can edit the spreadsheet and perform basic operations on data.
+This is a basic spreadsheets application made in C++ and RTWgui. You can edit the spreadsheet and perform basic operations on data.
 
 ## 2. Dependencies
-It supports 2 groups of libraries:
-1. SDL3, SDL3_TTF
-2. SFML
+The application is powered by [RTWgui](https://github.com/ErmalinskiMaksim/RTWgui).
+
 ## 3. Platforms 
-At the moment, it only supports Linux but Windows support is coming soon.
+Supports Linux and Windows.
 
 ## 4. User guide 
 At the moment, the user can:
@@ -18,11 +17,18 @@ At the moment, the user can:
 Advice can be found in the Help menu inside the app
 
 ## 5. Build&Run
-1. Fetch:\
-```git clone https://github.com/ErmalinskiMaksim/Spreadsheets-plus-plus.git```
-2. Build:\
-```cd Spreadsheets-plus-plus```\
-```cmake -S . -B build```\
-```cmake --build build```
-3. Run:\
-```build/Spreadsheets-plus-plus/Spreadsheet```
+```bash
+# fetch 
+git clone https://github.com/ErmalinskiMaksim/Spreadsheets-plus-plus.git
+# build 
+cd Spreadsheets-plus-plus
+cmake -S . -B build
+cmake --build build
+# run 
+build/Spreadsheets-plus-plus/Spreadsheet
+```
+
+## 6. Future plans
+* Functions
+* Tools for the toolbar 
+* Plots
