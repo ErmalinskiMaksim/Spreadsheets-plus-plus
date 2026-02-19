@@ -13,13 +13,11 @@ OptState IdleTableState::process(const MouseLeftDownEvent& event) {
             return RowResizingTableState{c}; // enter resizing state
     } else if (w.spreadsheetSpaceContains(c.m_mousePos)) {
         // a click on the cell -> request a dialog to type cell's content
-        auto [col, row] = w.getSpreadsheetPos(c.m_mousePos);
-        auto str = DataStorage::get().getRawData(Pos(col, row));
-
-        auto ctxRect = c.m_hoveredCell.getHitBox();
         c.r_layersRequest.get() = DialogCreateRequest{
-                    Widget{std::move(ctxRect), w.getFillColor()}
-                    , DialogCreateRequest::Payload{std::nullopt, std::move(str), MAX_CELL_TEXT_LENGTH}};
+                    Widget{std::move(c.m_hoveredCell), w.getFillColor()}
+                    , DialogCreateRequest::Payload{std::nullopt
+                    , DataStorage::get().getRawData(w.getSpreadsheetPos(c.m_mousePos))
+                    , MAX_CELL_TEXT_LENGTH}};
     } 
     return std::nullopt;
 }
@@ -35,7 +33,7 @@ OptState IdleTableState::process(const MouseRightUpEvent& event) {
     // request insertion/deletion menu
     if (w.columnSpaceContains(c.m_mousePos) || w.rowSpaceContains(c.m_mousePos)) {
         TableOperationsActionHandler<HandlerContext>::requestMainMenu(
-            HandlerContext{std::ref(c.m_hoveredCell), c.r_layersRequest, c.getOperation() });    
+            HandlerContext{w, c.r_layersRequest, c.getOperation(), std::cref(c.m_hoveredCell) });    
     } // else if (w.spreadsheetSpaceContains(c.m_mousePos)) { cell menu } 
     return std::nullopt;
 }
@@ -44,7 +42,7 @@ OptState IdleTableState::process(const MouseMotionEvent& event) {
     auto& c = m_context.get();
     // update the hovered-on cell selection rectangle
     c.m_mousePos = { event.x, event.y };
-    c.m_hoveredCell.setHitBox(c.r_widget.get().selectCell(c.m_mousePos));
+    c.m_hoveredCell = c.r_widget.get().selectCell(c.m_mousePos);
     return std::nullopt;
 }
 
@@ -55,16 +53,17 @@ OptState IdleTableState::process(const MouseScrollingEvent& event) {
     // add scrolling offset and update the gridlines
     w.addOffset(event.x, event.y);
     w.update();
-    c.m_hoveredCell.setHitBox(w.selectCell(c.m_mousePos));
+    c.m_hoveredCell = w.selectCell(c.m_mousePos);
     return std::nullopt;
 }
 
 // commits resizing
 OptState ColumnResizingTableState::process(const MouseLeftUpEvent& event) {
     auto& c = m_context.get();
-    c.r_widget.get().resizeColumnLabel(c.m_mousePos.x, event.x - c.m_mousePos.x);      
+    auto& w = c.r_widget.get();
+    w.resizeColumnLabel(c.m_mousePos.x, event.x - c.m_mousePos.x);      
     c.m_mousePos = {event.x, event.y};  
-    c.m_hoveredCell.setHitBox(c.r_widget.get().selectCell(c.m_mousePos));
+    c.m_hoveredCell = w.selectCell(c.m_mousePos);
     return IdleTableState{c}; 
 }
 
@@ -83,7 +82,7 @@ OptState RowResizingTableState::process(const MouseLeftUpEvent& event) {
     auto& w = c.r_widget.get();
     w.resizeRowLabel(c.m_mousePos.y, event.y - c.m_mousePos.y);
     c.m_mousePos = {event.x, event.y}; 
-    c.m_hoveredCell.setHitBox(w.selectCell(c.m_mousePos));
+    c.m_hoveredCell = w.selectCell(c.m_mousePos);
     return IdleTableState{c}; 
 }
 

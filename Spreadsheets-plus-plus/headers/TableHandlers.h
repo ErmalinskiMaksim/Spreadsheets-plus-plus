@@ -28,7 +28,7 @@ public:
         constexpr auto payload = buildPayload();
 
         const auto& w = ctx.widget.get();
-        auto hbox = w.getHitBox();
+        const auto& hbox = ctx.rect->get();
         ctx.req.get() = MenuCreateRequest {
             Widget {
                 Rect{hbox.x, hbox.y, w.getCharWidth() * 13, w.getCharHeight() * 3}
@@ -69,7 +69,7 @@ public:
     // TODO void requestMainMenu(HandlerContext);
     bool dispatch(DialogResponse&& resp, HandlerContext ctx) {
         if (!ctx.op) return false;
-        ctx.op->get() = WriteOperation{resp.text}; 
+        ctx.op->get() = WriteOperation{std::move(resp.text)}; 
         return true; // TODO is it ok?
     }
 };

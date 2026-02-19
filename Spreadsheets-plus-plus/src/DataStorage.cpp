@@ -39,12 +39,12 @@ DataStorage::getValue(const Pos& pos) const noexcept {
     return std::cref(cell->get().formattedView);
 }
 
-std::optional<std::string>
+std::optional<std::string_view>
 DataStorage::getRawData(const Pos& pos) const noexcept {
     auto cell = cellAtPos(pos);
     // if cell doesn't exist return nothing
     if(!cell) return std::nullopt;
-    return std::cref(cell->get().text);
+    return cell->get().text;
 }
 
 const DataStorage::BlockMap& DataStorage::getRawStorage() const noexcept {

@@ -21,9 +21,8 @@ public:
     static constexpr bool hasOperations = true;
 
     TableInteractor(NonModalLayerCreateRequest::Payload&&, TableWidgetRef table, RequestView req)
-    : m_hoveredCell{
-        Rect{}, Color{}, Color{0x00, 0x00, 0xFF, 0xFF}, table.get().getCharWidth(), table.get().getCharHeight()} 
-    , m_operation{EmptyOperation{}} 
+    : m_operation{EmptyOperation{}} 
+    , m_hoveredCell{}
     , m_mousePos{0.0f, 0.0f}
     , r_widget(table)
     , r_layersRequest(req)
@@ -32,6 +31,10 @@ public:
 
     void dispatchEvents(const LayerEvent& event) {
         std::visit([&](auto&& ev) { m_fsm.process(ev); }, event);
+    }
+
+    void update() {
+
     }
     
     OperationView getOperation() {
@@ -52,8 +55,7 @@ public:
     }
 
     void render(const Renderer& renderer, const Font& font) const {
-        auto hoveredRect = m_hoveredCell.getHitBox();
-        renderer.renderRect(&hoveredRect, {0x00, 0x00, 0xFF, 0xFF});
+        renderer.renderRect(&m_hoveredCell, {0x00, 0x00, 0xFF, 0xFF});
 
         m_fsm.draw(renderer, font);
 
@@ -101,10 +103,10 @@ private:
         DataStorage::get().setData(std::move(op.text), pos);
     }
 
-    // selection rectangle of the hovered-on cell
-    Widget m_hoveredCell;
     // table operations
     OperationRegister m_operation;
+    // selection rectangle of the hovered-on cell
+    Rect m_hoveredCell;
     // cached mouse position
     Point m_mousePos;
     // a reference to the table widget

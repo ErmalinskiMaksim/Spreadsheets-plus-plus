@@ -9,9 +9,10 @@
 // bare minimum context that is necessary for 
 // an action handler
 struct HandlerContext {
-    std::reference_wrapper<Widget> widget;
+    std::reference_wrapper<const Widget> widget;
     RequestView req;
     OptOperationView op = std::nullopt;
+    std::optional<std::reference_wrapper<const Rect>> rect = std::nullopt;
 };
 
 #endif

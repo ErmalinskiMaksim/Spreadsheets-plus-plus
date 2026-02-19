@@ -98,7 +98,7 @@ public:
     getValue(const Pos&) const noexcept;
     
     // get raw string data of a cell at <pos> or nothing if it's empty 
-    std::optional<std::string> getRawData(const Pos&) const noexcept;
+    std::optional<std::string_view> getRawData(const Pos&) const noexcept;
 
     // get raw BlockMap  
     const BlockMap& getRawStorage() const noexcept;
